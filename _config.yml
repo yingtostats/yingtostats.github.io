@@ -10,7 +10,7 @@ description: Data-Scientist-to-be
 external-image: false
 picture: assets/images/profile.jpg
 
-#url: http://yingtostats.github.io
+url: http://yingtostats.github.io
 # your url: http://USERNAME.github.io
 
 permalink: /:title/
@@ -100,6 +100,6 @@ gems:
   - jekyll-paginate
 
 #jekyll-mentions:
-#    base_url: https://yingsight.com
+    base_url: https://yingsight.com
 gist:
   noscript: false
