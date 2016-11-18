@@ -26,5 +26,5 @@ I am a forth-year undergraduate at [Renmin University of China](http://www.ruc.e
 <h2>Projects</h2>
 
 <ul>
-	<li><a href="https://github.com/">Introduction to Hierarchical Model</a></li>
+	<li><a href="http://yingsight.com/hierarchical/">Introduction to Hierarchical Model</a></li>
 </ul>

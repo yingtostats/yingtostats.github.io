@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Introduction to Hierarchical Model and LDA"
+title:  "Introduction to Hierarchical Model"
 date:   2016-10-28 21:00:00
 tag:
 - Statistics
