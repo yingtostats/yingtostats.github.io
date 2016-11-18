@@ -1,16 +1,16 @@
 # main text of home
 name: Jannis Ying Zhang
-bio: Data-Scientist-to-be
+bio: Life is short, but I would rather live it slow.
 
 # twitter summary info
-description: Life is short, but I would rather live it slow.
+description: Data-Scientist-to-be
 
 # if it's an external image, update below for true
 # better with square images
 external-image: false
 picture: assets/images/profile.jpg
 
-url: http://yingtostats.github.io
+#url: http://yingtostats.github.io
 # your url: http://USERNAME.github.io
 
 permalink: /:title/
@@ -34,7 +34,7 @@ twitter: jannis1202
 # google: mygoogle
 instagram: zyjannis
 # pinterest: mypinterest
-linkedin: in/ying-zhang-54a80aa0?trk=nav_responsive_tab_profile_pic
+linkedin:
 #youtube: myyoutube
 #spotify: myspotify
 github: yingtostats
@@ -55,7 +55,7 @@ authors:
 # do you want a larger site? change the option below
 # options: [normal, large] | default: normal
 # normal = 560px / large = 810px
-width: normal
+width: large
 
 # if you don't need pagination, comment the *paginate* configs below
 # paginate: 5
@@ -65,7 +65,7 @@ width: normal
 projects: true
 
 # if you don't need "about" or "blog", comment them out below
-about: false
+about: true
 blog: true
 
 # do you want to show the "read time" of the posts?
@@ -99,5 +99,5 @@ gems:
   - jekyll-gist
   - jekyll-paginate
 
-jekyll-mentions:
-    base_url: https://yingsight.com
+#jekyll-mentions:
+#    base_url: https://yingsight.com
