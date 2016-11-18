@@ -13,7 +13,7 @@ fontsize: 23pt
 
 ---
 
-
+{% include mathjax_support.html %}
 
 # Introduction to Hierarchical Model
 
@@ -21,7 +21,7 @@ fontsize: 23pt
 
 ## Introduction to Bayesian Framework
 
-###Priori, Likelihood and Posteriori
+### Priori, Likelihood and Posteriori
 
 
 *  Bayes Formula $$p(\theta\mid y) = \frac{p(\theta)p(y\mid\theta)}{p(y)}$$
@@ -242,7 +242,7 @@ $$\theta \sim \text{Dirichlet}(\alpha)$$
 
 ### Posteriorl Inference
 
-####Intractable Posterior
+#### Intractable Posterior
 
 *  We want to find the posterior distribution of $\theta$ and $z$
 $$p(\theta,{\bf z} \mid {\bf w}, \alpha, \beta) = \frac{p(\theta,{\bf z},{\bf w}\mid \alpha \beta)}{p({\bf w} \mid \alpha, \beta)}$$
@@ -250,10 +250,8 @@ $$p(\theta,{\bf z} \mid {\bf w}, \alpha, \beta) = \frac{p(\theta,{\bf z},{\bf w}
 *  How to get the posterior?
 
 
-##Reference
+## Reference
 
-D. Blei, A. Ng, and M. Jordan. (2003) Latent Dirichlet Allocation, Journal of Machine Learning Research 3:993-1022.
-
-K. Nigam, A.McCallum, S. Thrun, and T. Mitchell (2000) Text classification from labeled and unlabeled documents using EM.,Machine Learning 39(2/3):103-134
-
-A. Gelman, J.B. Carlin, H.S. Stern, D.B. Dunson, A. Vehtari, and D.B. Rubin (2013),Bayesian Data Analysis,CRC Press 39(2/3):101-103
+- D. Blei, A. Ng, and M. Jordan. (2003) Latent Dirichlet Allocation, Journal of Machine Learning Research 3:993-1022.
+- K. Nigam, A.McCallum, S. Thrun, and T. Mitchell (2000) Text classification from labeled and unlabeled documents using EM.,Machine Learning 39(2/3):103-134
+- A. Gelman, J.B. Carlin, H.S. Stern, D.B. Dunson, A. Vehtari, and D.B. Rubin (2013),Bayesian Data Analysis,CRC Press 39(2/3):101-103
