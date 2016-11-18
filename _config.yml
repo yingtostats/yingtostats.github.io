@@ -99,7 +99,7 @@ gems:
   - jekyll-gist
   - jekyll-paginate
 
-#jekyll-mentions:
+jekyll-mentions:
     base_url: https://yingsight.com
-gist:
-  noscript: false
+#gist:
+#  noscript: false
