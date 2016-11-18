@@ -29,16 +29,16 @@ highlighter: rouge
 disqus: yingsight
 
 # if you don't have any of social below, comment the line
-facebook: profile.php?id=100010323219437
+facebook: 100010323219437
 twitter: jannis1202
 # google: mygoogle
 instagram: zyjannis
 # pinterest: mypinterest
-linkedin:
+linkedin: yingsight
 #youtube: myyoutube
 #spotify: myspotify
 github: yingtostats
-stackoverflow: 7044681/mystackoverflow
+#stackoverflow: 7044681/mystackoverflow
 #quora: userquora
 #reddit: username
 #medium: medium
@@ -46,7 +46,7 @@ stackoverflow: 7044681/mystackoverflow
 email: zyjannis@gmail.com
 
 authors:
-    johndoe:
+    Jannis:
         name: Jannis Ying Zhang
         bio: A statistician who wants a Ph.D. offer.
         external-image: false
@@ -55,7 +55,7 @@ authors:
 # do you want a larger site? change the option below
 # options: [normal, large] | default: normal
 # normal = 560px / large = 810px
-width: large
+width: normal
 
 # if you don't need pagination, comment the *paginate* configs below
 # paginate: 5
@@ -78,7 +78,7 @@ show-tags: true
 related: true
 
 # show next & prev links in blog post?
-blog-nav-links: false
+blog-nav-links: true
 
 # show author block at the end of a post ?
 show-author: true
@@ -101,3 +101,5 @@ gems:
 
 #jekyll-mentions:
 #    base_url: https://yingsight.com
+gist:
+  noscript: false
