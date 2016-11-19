@@ -65,7 +65,7 @@ width: normal
 projects: true
 
 # if you don't need "about" or "blog", comment them out below
-about: true
+about: false
 blog: true
 
 # do you want to show the "read time" of the posts?
@@ -100,6 +100,6 @@ gems:
   - jekyll-paginate
 
 jekyll-mentions:
-    base_url: yingsight.com
+    base_url: http://yingsight.com
 #gist:
 #  noscript: false
