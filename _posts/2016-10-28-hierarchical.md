@@ -15,7 +15,7 @@ fontsize: 23pt
 
 {% include mathjax_support.html %}
 
-**Data Mining Center, Renmin University of China**
+$$Data Mining Center, Renmin University of China$$
 
 ## Introduction to Bayesian Framework
 
