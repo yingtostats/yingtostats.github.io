@@ -221,10 +221,10 @@ $$\alpha \sim Gamma(1,2) \text{ , } \beta \sim Gamma(3,4)$$  for $i = 1,2,...,70
 *  A *Vocabulary* indexed by $\{1,2,...,V\}$
 *  A *word* is the basic unit of discrete data and is represented by a V-vector s.t. $$w^v = 1 \text{ and } w^u = 0 \text{ for } u \neq v$$
 *  For example $$w_i = (0,0,1,0,0...,0)$$ If the ith *word*  matches the 3rd word in vocabulary
-*  A *document* is a sequence of N words denoted by $**w** = (w_1,w_2,...,w_N)$
-*  A *corpus* is a collection of M documents denoted by $**D** = \{ {** w_1**},{**w_2**},...,{**w_M**} \}$
+*  A *document* is a sequence of N words denoted by ${\bf w} = (w_1,w_2,...,w_N)$
+*  A *corpus* is a collection of M documents denoted by ${\bf D} = \{ {\bf w_1},{\bf w_2},...,{\bf w_M} \}$
 *  There are k topics in total.
-*  **Bag-of-words** Assumption (Exchangeable)
+*  **Bag-of-words** Assumption \(Exchangeable\)
 
 ### Where is the "Latent" in LDA?
 figure missing
@@ -232,7 +232,7 @@ figure missing
 *  $$w \mid \beta, z \sim \text{Multinomial} $$
 $$z \mid \theta \sim \text{Multinomial}(\theta)$$
 $$\theta \sim \text{Dirichlet}(\alpha)$$
-*  So $\alpha$ and $\beta$ are the Hyperparameters in this model. \#(k + kV)
+*  So $\alpha$ and $\beta$ are the Hyperparameters in this model. \#\(k + kV\)
 
 *  $$\beta = \{\beta_{ij}\}_{k \times V}$$
 *  where $${\beta_{ij}} = p(w^{j} = 1 \mid z^i = 1)$$
