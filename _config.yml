@@ -100,6 +100,6 @@ gems:
   - jekyll-paginate
 
 jekyll-mentions:
-    base_url: https://yingsight.com
+    base_url: http://yingsight.com
 #gist:
 #  noscript: false
