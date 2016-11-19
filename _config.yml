@@ -12,7 +12,9 @@ picture: assets/images/profile.jpg
 
 url: http://yingtostats.github.io
 # your url: http://USERNAME.github.io
-
+#paginate: 5
+#paginate_path:  "/page:num/"
+#excerpt: '<br>'
 permalink: /:title/
 
 markdown: kramdown
@@ -100,6 +102,6 @@ gems:
   - jekyll-paginate
 
 jekyll-mentions:
-    base_url: http://yingsight.com
+   base_url: http://yingsight.com
 #gist:
 #  noscript: false
