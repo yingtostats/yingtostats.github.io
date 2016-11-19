@@ -14,7 +14,7 @@ fontsize: 23pt
 ---
 
 {% include mathjax_support.html %}
-<center> Jannis Ying Zhang </center>
+
 <center> Data Mining Center, Renmin University of China </center>
 
 ## Introduction to Bayesian Framework
