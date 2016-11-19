@@ -15,7 +15,7 @@ fontsize: 23pt
 
 {% include mathjax_support.html %}
 
-{\centering Data Mining Center, Renmin University of China}
+<center> Data Mining Center, Renmin University of China</center>
 
 ## Introduction to Bayesian Framework
 
