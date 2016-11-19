@@ -8,7 +8,7 @@ tag:
 projects: true
 blog: false
 author: Jannis
-description: Hierarchical Model and Latent Dirichlet Model
+description: Hierarchical Model and Latent Dirichlet Allocation
 fontsize: 23pt
 
 ---
@@ -83,7 +83,7 @@ Therefore, $$\theta \mid y \sim \text{Beta}(\alpha + y,\beta +n - y) \quad \thet
 
 ##### Why we use Conjugate Prior?
 
-*  {\bf They simplify the computation!}
+*  They simplify the computation!
 We can easily derive the posterior distribution if we use conjugate prior.
 *  Common Conjugate Families
 
@@ -97,8 +97,8 @@ We can easily derive the posterior distribution if we use conjugate prior.
 *  Example 2: $$p(\theta) \propto 1 \quad \quad \theta \in (-\infty,\infty) $$
 Is that correct?
 *  Prior is not a distribution! Its density cannot be integrated to 1.
-We call this prior is {\bf improper}.
-*  Improper prior can {\bf sometimes} lead to proper posterior.
+We call this prior is  **improper**.
+*  Improper prior can **sometimes** lead to proper posterior.
 *  As long as it can lead to proper posterior, the prior can be useful.
 *  Example 3: $$p(\theta) \propto 1 \quad \quad \theta \in (-\infty,\infty) $$
 $$y\mid \theta \sim N(\theta, 1)$$
@@ -146,14 +146,14 @@ figure missing
 
 
 #### Toy Example
-How to set the $\alpha$ and $\beta$?
-(We call the parameters in prior distribution {\bf \em hyperparameter})
+* How to set the $\alpha$ and $\beta$?
+* We call the parameters in prior distribution *hyperparameter*.
 
 #### How to set the priors?
 
-##### Fixed Prior Distribution(Informative Prior
-
-*  {\bf We knew} that $\theta \sim$ Beta Distribution with known mean and variance.
+##### Fixed Prior Distribution
+Informative Prior
+*  We knew that $\theta \sim$ Beta Distribution with known mean and variance.
 *  $\theta$ vary due to differences in rats and experimental conditions.
 *  Find the corresponding $\alpha$, $\beta$.
 *  $\theta \sim$ Beta$(\alpha,\beta)$ as its prior distribution.
@@ -172,7 +172,7 @@ $$\theta \sim \text{Beta}(\hat{\alpha},\hat{\beta})$$
 &=  (\frac{\sum_{i = 1}^{70} y_i}{\sum_{i = 1}^{70}n_{i}})(\frac{\hat{\alpha} + \hat{\beta}}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}}) + (\frac{\sum_{i = 1}^{71} y_i}{\sum_{i = 1}^{71}n_{i}})(\frac{\sum_{i = 1}^{71}n_{i}}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}})
 \end{aligned}$$
 *  Is that Correct?
-*  \centering{\bf NO!}
+*  NO!
 *  Overestimate the precision of the posterior. (Data Used Twice)
 
 ##### Set the Hyperparameters without Data
@@ -220,13 +220,13 @@ $$\alpha \sim Gamma(1,2) \text{ , } \beta \sim Gamma(3,4)$$  for $i = 1,2,...,70
 
 #### Notation and Assumption
 
-*  A Vocabulary indexed by $\{1,2,...,V\}$
-*  A {\em word} is the basic unit of discrete data and is represented by a V-vector s.t. $$w^v = 1 \text{ and } w^u = 0 \text{ for } u \neq v$$
-*  For example $$w_i = (0,0,1,0,0...,0)$$ If the ith {\em word}  matches the 3rd word in vocabulary
-*  A {\em document} is a sequence of N words denoted by ${\bf w} = (w_1,w_2,...,w_N)$
-*  A {\em corpus} is a collection of M documents denoted by ${\bf D} = \{ {\bf w_1},{\bf w_2},...,{\bf w_M} \}$
+*  A *Vocabulary* indexed by $\{1,2,...,V\}$
+*  A *word* is the basic unit of discrete data and is represented by a V-vector s.t. $$w^v = 1 \text{ and } w^u = 0 \text{ for } u \neq v$$
+*  For example $$w_i = (0,0,1,0,0...,0)$$ If the ith *word*  matches the 3rd word in vocabulary
+*  A *document* is a sequence of N words denoted by $**w** = (w_1,w_2,...,w_N)$
+*  A *corpus* is a collection of M documents denoted by $**D** = \{ {** w_1**},{**w_2**},...,{**w_M**} \}$
 *  There are k topics in total.
-*  {\em Bag-of-words} Assumption (Exchangeable)
+*  **Bag-of-words** Assumption (Exchangeable)
 
 ### Where is the "Latent" in LDA?
 figure missing
@@ -234,7 +234,7 @@ figure missing
 *  $$w \mid \beta, z \sim \text{Multinomial} $$
 $$z \mid \theta \sim \text{Multinomial}(\theta)$$
 $$\theta \sim \text{Dirichlet}(\alpha)$$
-*  So $\alpha$ and $\beta$ are the Hyperparameters in this model. \#($k + kV$)
+*  So $\alpha$ and $\beta$ are the Hyperparameters in this model. \#(k + kV)
 
 *  $$\beta = \{\beta_{ij}\}_{k \times V}$$
 *  where $${\beta_{ij}} = p(w^{j} = 1 \mid z^i = 1)$$
