@@ -15,9 +15,7 @@ fontsize: 23pt
 
 {% include mathjax_support.html %}
 
-# Introduction to Hierarchical Model
-
-__Data Mining Center, Renmin University of China__
+**Data Mining Center, Renmin University of China**
 
 ## Introduction to Bayesian Framework
 
