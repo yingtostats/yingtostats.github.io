@@ -10,7 +10,7 @@ description: Data-Scientist-to-be
 external-image: false
 picture: assets/images/profile.jpg
 
-url: http://yingtostats.github.io
+url: https://yingtostats.github.io
 # your url: http://USERNAME.github.io
 #paginate: 5
 #paginate_path:  "/page:num/"
@@ -102,6 +102,6 @@ gems:
   - jekyll-paginate
 
 jekyll-mentions:
-   base_url: http://yingsight.com
+   base_url: https://yingtostats.github.io
 #gist:
 #  noscript: false
