@@ -3,6 +3,7 @@ layout: post
 title:  "Quasi-Newton"
 date:   2016-11-28 21:00:00
 tag:
+- 中文
 - Code
 projects: true
 blog: false
