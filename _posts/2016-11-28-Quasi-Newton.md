@@ -11,6 +11,8 @@ description: Quasi-Newton Methods with comparisons
 fontsize: 23pt
 ---
 
+{% include mathjax_support.html %}
+
 # Newton型方法的数值比较
 
 ## 线搜索程序
