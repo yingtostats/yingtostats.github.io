@@ -12,15 +12,15 @@ description: Quasi-Newton Methods with comparisons
 fontsize: 23pt
 ---
 
-#Newton型方法的数值比较.编写下列程序
+# Newton型方法的数值比较.编写下列程序
 
-##线搜索程序
+## 线搜索程序
 
 程序可以包含精确线搜索准则与不同的非精确性搜索准则以及不同的线搜索求步长的方法。
 
-###精确线搜索
+### 精确线搜索
 
-####进退法求初始搜索区间
+#### 进退法求初始搜索区间
 
 * 给定初始值start$\in (0,\infty)$,$r > 0$,$t > 1$, $i:=0$
 * alpha.new = start + r, 若alpha.new <= 0,则令alpha.new := 0
@@ -62,7 +62,7 @@ ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
 }
 <\code>
 
-####精确与非精确线搜索程序
+#### 精确与非精确线搜索程序
 
 * 给定函数f，f的梯度g,$xk = x_{k}$, $dk = d_{k}$
 * (a,b)为初始搜索区间的上下限，当线搜索方法为二项插值法时不需要设定。
