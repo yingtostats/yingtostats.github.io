@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Project of Quasi-Newton Method"
+title:  "Quasi-Newton"
 date:   2016-11-28 21:00:00
 tag:
 - Math
@@ -27,7 +27,7 @@ fontsize: 23pt
 * 按照算法，并且限制了最大循环次数max.it
 * 返回区间上下限a,b以及循环次数i
 
-```{r}
+<code>
 ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
 
     i <- 0
@@ -35,19 +35,19 @@ ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
         while(i <= max.it) {
             i <- i + 1
             alpha.new = start + r
-            
+
             if (alpha.new <= 0) {
                 alpha.new = 0
                 break
             }else if (get.alpha(alpha.new) >= get.alpha(start)) {
                 break
             }
-            
+
             r <- t*r
             alpha <- start
             start <- alpha.new
         }
-        
+
         if(i == 1) { #i == 1则需要换方向
             r <- -r
             alpha <- alpha.new
@@ -56,11 +56,11 @@ ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
             b <- max(alpha,alpha.new)
             break
         }
-        
+
     }
     return(c(a,b,i))
 }
-```
+<\code>
 
 ####精确与非精确线搜索程序
 
@@ -73,24 +73,24 @@ ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
 * method可以为0.618法或者Poly二项插值法（alpha0为初始值）
 * 返回一个长度为2的向量，表示步长与循环次数。
 
-```{r}
+<code>
 
 linesearch <- function(f,g,xk,dk, a = 0.1, b=100, alpha0 = 1, precision = 0.001, tau = 0.618, exact = TRUE, method = "0.618", criteria = "Goldstein",rho = 0.0001, sigma = 0.9, max.it = 1000) {
-    
+
     get.alpha <- function(alpha) {
       f(xk+alpha*dk)
     }
-    
+
     i = 1
-    
+
     if(method != "poly")  {
         while(exact && i <= max.it) { #0.618法的精确搜索
-          
+
             if((b - a) < precision) { #若b与a相隔很小则直接默认用alpha0
               alpha0 <- (b+a)/2
               break
             }
-            
+
             alpha.l <- a + (1 - tau) * (b - a)
             alpha.u <- a + tau * (b - a)
             if(get.alpha(alpha.l) - get.alpha(alpha.u) < 0) {
@@ -99,11 +99,11 @@ linesearch <- function(f,g,xk,dk, a = 0.1, b=100, alpha0 = 1, precision = 0.001,
               a <- alpha.l
             }
             i = i + 1
-            
+
         }
-      
+
         while(!exact && i<=max.it) { #0.618法非精确搜索
-          
+
             alpha0 <- (b+a)/2
             fk <- get.alpha(0)
             gd <- t(g(xk))%*%dk
@@ -115,45 +115,45 @@ linesearch <- function(f,g,xk,dk, a = 0.1, b=100, alpha0 = 1, precision = 0.001,
                     break
                   }
                 }
-                
+
                 if(criteria == "Wolfe") {
                   if(t(g(xk + alpha0*dk))%*%dk >= sigma * gd) {
                     break
                   }
                 }          
-                
+
                 if(criteria == "StrongWolfe") {
                   if(abs(t(g(xk + alpha0*dk))%*%dk) <= - sigma * gd) {
                     break
                   }
                 }     
             }
-          
+
             alpha.l <- a + (1 - tau) * (b - a)
             alpha.u <- a + tau * (b - a)
-            
+
             if(get.alpha(alpha.l) - get.alpha(alpha.u) < 0) {
               b <- alpha.u
             }else {
               a <- alpha.l
             }
-            
+
             i = i + 1
-              
+
         }
     }
-    
+
     if (method == "poly") {#二项插值法
-        
+
         stopifnot(!exact)#并没有精确搜索的算法
-      
+
         fk <- get.alpha(0)
         gd <- (t(g(xk))%*%dk)[1,1]
-        
+
         while(!exact && i<= max.it) {
-          
+
             phi <- get.alpha(alpha0)
-            
+
             if(phi <= fk + rho * gd * alpha0) {
                 #非精确搜索的三项准则
                 if(criteria == "Goldstein") {
@@ -161,64 +161,30 @@ linesearch <- function(f,g,xk,dk, a = 0.1, b=100, alpha0 = 1, precision = 0.001,
                     break
                   }
                 }
-                
+
                 if(criteria == "Wolfe") {
                   if(((t(g(xk + alpha0*dk))%*%dk)[1,1] >= sigma * gd)&& alpha0 >=0) {
                     break
                   }
                 }          
-                
+
                 if(criteria == "StrongWolfe") {
                   if((abs(t(g(xk + alpha0*dk))%*%dk)[1,1] <= - sigma * gd) && alpha0 >=0) {
                     break
                   }
                 }          
             }
-        
+
             i <- i + 1
             alpha0 <- (- gd) * alpha0^2 / (2 * (phi - fk - gd * alpha0))
             if(alpha0 < 0) {alpha0 = 0}
         }
     }
-    
+
     return(c(alpha0,i)) #返回步长与循环次数
 }
 
-```
-
-###函数测试
-
-现在我们来测试一下线搜索函数的有效性
-
-* 使用函数f作为测试函数，是一个简单的多元二次的函数。
-* 计算了它的梯度g
-* 计算了它的hessian矩阵
-* 使用负梯度方向d作为代入值
-
-```{r}
-#test function
-f <- function(x) { t(x-c(2,2,4,4))%*%x} #测试函数
-g = function(x) {2*x - c(2,2,4,4)} #它的梯度
-hess <- function(x) {2*diag(4)} #它的hessian矩阵
-x0 = c(3.4,43,30,43) #初始值
-d = -g(x0) #选择的负梯度方向
-get.alpha <- function(a1) {f(as.vector(x0+a1*d))[1]} #步长函数（最小化之）
-
-#region test
-ls.region(get.alpha,start = 3, r = 0.5, t = 1.1)
-
-#line search test
-linesearch(f,g,x0,d, a=0,b=1.345,exact = FALSE,precision = 0.001,criteria = "Goldstein")
-linesearch(f,g,x0,d, a=0,b=1.345,exact = FALSE,precision = 0.001,criteria = "Wolfe")
-linesearch(f,g,x0,d, a=0,b=1.345,exact = FALSE,precision = 0.001,criteria = "StrongWolfe")
-linesearch(f,g,x0,d, a=0,b=1.345,exact = TRUE,precision = 0.001)
-linesearch(f,g,x0,d, alpha = 200,exact = FALSE,method = "poly",criteria = "Goldstein",precision = 0.000001)
-linesearch(f,g,x0,d, alpha = 200,exact = FALSE,method = "poly",criteria = "Wolfe",precision = 0.000001)
-linesearch(f,g,x0,d, alpha = 200,exact = FALSE,method = "poly",criteria = "StrongWolfe",precision = 0.000001)
-
-```
-
-测试结果表明函数没有特别明显的bug，是能够正常运行的
+<\code>
 
 ##阻尼Newton法和修正Newton方法的程序
 
@@ -233,10 +199,10 @@ linesearch(f,g,x0,d, alpha = 200,exact = FALSE,method = "poly",criteria = "Stron
 * max为最大循环次数
 * 输出trace表示每次更新的值、k表示循环次数，c表示区间搜索总循环次数，p表示线搜索总循环次数
 
-```{r}
+<code>
 
 Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FALSE,ls.method = "0.618",criteria = "Goldstein",rho = 0.0001,sigma = 0.1, r = 3, t = 1.1, v = 1,max= 1000) {
-    
+
     n <- length(x0)
     trace <- matrix(NA,nrow = max, ncol = n)
     trace[1,] <- x0
@@ -244,17 +210,17 @@ Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FAL
     c = 0
     p = 0
     alpha = 1
-    
+
     while(k < max) {
 
         gk <- g(x0)
         Gk <- hess(x0)
         d <- -solve(Gk)%*%gk
-        
+
         if (method == "Damped") {
-            
+
             get.alpha <- function(a1) {f(as.vector(x0+a1*d))[1]}
-            
+
             if(ls.method == "0.618") {
                 region <- ls.region(get.alpha,start = alpha, r = r, t = t,max.it = max)
                 a <- region[1]
@@ -268,20 +234,20 @@ Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FAL
             }
             p =  p + result.alpha[2]
         }
-        
+
         x1 = x0 + alpha*d
         k = k + 1
         trace[k,] <- x1
-        
+
         if (sum(g(x1)^2) < precision) {
           break
         }
         x0 <- x1
     }
-    
+
     return(list(trace, c(k,c,p)))
 }
-```
+<\code>
 
 ##SR1方法，BFGS方法，DFP方法的程序
 
@@ -295,7 +261,7 @@ Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FAL
 * max为最大循环次数
 * 输出trace表示每次更新的值、k表示循环次数，c表示区间搜索总循环次数，p表示线搜索总循环次数
 
-```{r}
+<code>
 Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALSE,ls.method = "0.618",criteria = "Goldstein",rho = 0.0001,sigma = 0.1, r = 3, t = 1.1, v = 1,max= 1000) {
     n <- length(x0)
     trace <- matrix(NA,nrow = max, ncol = n)
@@ -305,9 +271,9 @@ Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALS
     p = 0
     Hk = diag(n)
     alpha = 1
-    
+
     while(k < max) {
-      
+
         gk <- g(x0)
         d <- -Hk%*%gk
         get.alpha <- function(a1) {f(as.vector(x0+a1*d))[1]}
@@ -323,7 +289,7 @@ Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALS
             result.alpha <- linesearch(f,g,x0,d,alpha0 = alpha,precision = 0.01,method = ls.method,exact = exact,precision = precision,criteria = criteria,rho = rho, sigma = sigma, max.it = max/50)
             alpha <- result.alpha[1]
         }
-        
+
         p = p + result.alpha[2] #line search times
         x1 = x0 + alpha*d
         k = k + 1
@@ -333,10 +299,10 @@ Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALS
         if (sum(g1^2)< precision) {
           break
         }
-        
+
         sk <- alpha*d
         yk <- g1 - gk
-        
+
         if(method == "SR1") {
             Hk <- Hk + ((sk-Hk%*%yk)%*%t(sk-Hk%*%yk))/(t(sk-Hk%*%yk)%*%yk)[1,1]
         }else if (method =="BFGS") {
@@ -344,44 +310,12 @@ Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALS
         }else if (method == "DFP")  {
             Hk <- Hk + (sk%*%t(sk)/(t(sk)%*%yk)[1,1]) - (Hk%*%yk%*%t(yk)%*%Hk/(t(yk)%*%Hk%*%yk)[1,1])
         }
-        
+
         x0 <- x1
     }
     return(list(trace,c(k,c,p)))
 }
-```
-
-###函数测试
-
-* 还是使用前面测试的四元二次函数进行测试
-* 测试Newton与Quasi.Newton函数的有效性
-* 输出的正确结果应该是(1,1,2,2)
-
-```{r}
-#Newton method test
-rs1 <- Newton(f,g,hess,x0,method = "Newton",precision = 0.0001,exact = FALSE, criteria = "StrongWolfe",rho = 0.3,sigma = 0.9, max = 1000)
-rs1 <- rs1[[1]]
-rs1[!is.na(rs1[,1]),]
-
-rs2 <- Newton(f,g,hess,x0,method = "Damped",precision = 0.0001,exact = FALSE, criteria = "StrongWolfe",rho = 0.0001,sigma = 0.9, max = 1000)
-rs2 <- rs2[[1]]
-rs2[!is.na(rs2[,1]),]
-
-#Quasi Newton method test
-rs3 <- Quasi.Newton(f,g,x0,method = "SR1",precision = 0.0001,exact = FALSE, criteria = "StrongWolfe",rho = 0.3,sigma = 0.9,max = 1000)
-rs3 <- rs3[[1]]
-rs3[!is.na(rs3[,1]),]
-
-rs4 <- Quasi.Newton(f,g,x0,method = "BFGS",precision = 0.0001,exact = FALSE, criteria = "StrongWolfe",rho = 0.3,sigma = 0.9,max = 1000)
-rs4 <- rs4[[1]]
-rs4[!is.na(rs4[,1]),]
-
-rs5 <- Quasi.Newton(f,g,x0,method = "DFP",precision = 0.0001,exact = FALSE, criteria = "StrongWolfe",rho = 0.3,sigma = 0.9,max = 1000)
-rs5 <- rs5[[1]]
-rs5[!is.na(rs5[,1]),]
-```
-
-测试的结果表明大家都快速收敛到了正确的最小值点（由于是二次函数，所以Newton法必然一步即可到达最小值）。
+<\code>
 
 ##最优化问题
 
@@ -404,56 +338,56 @@ f <- function(x) {
     n0 <- length(x)
     ti <- (1:29)/29
     r <- rep(0,31)
-    
+
     r[30] <- x[1]
     r[31] <- x[2] - x[1]^2 - 1
-    
+
     for ( i in 1:29) {
         r2 <- - (sum(t(x)%*%(ti[i]^(c(1:n0-1)))))^2 - 1
         r1 <- 0
-        
+
         for ( j in 2:n0) {
             r1 = r1 + (j-1)*x[j]*ti[i]^(j-2)
         }
-        
+
         r[i] = r1 + r2
     }
-    
+
     return(sum(r^2))
 }
 
 g <- function(x) {
     n0 <- length(x)
     ti <- (1:29)/29
-    
+
     s <- rep(0,29)
     r <- rep(0,31)
     l <- rep(0,n0)
-    
+
     g <- rep(0,n0)
-    
+
     r[30] <- x[1]
     r[31] <- x[2] - x[1]^2 - 1
-    
+
     for ( i in 1:29) {
         s[i] <- sum(t(x) %*% (ti[i]^(c(1:n0-1))))
         r2 <- - (s[i])^2 - 1
         r1 <- 0
-      
+
         for ( j in 2:n0) {
             r1 = r1 + (j-1)*x[j]*ti[i]^(j-2)
         }
-      
+
         r[i] = r1 + r2
     }
-    
+
     for ( i in 1:29)  {
         for (j in 1:n0) {
             l[j] <- (j-1) * ti[i]^(j-1) - 2 * s[i] * ti[i]^(j-1)
         }
         g <- g + 2*r[i]*l
     }
-    
+
     g <- g + c(2*x[1],rep(0,n0-1))
     g <- g + 2*(x[2] - x[1]^2 - 1)*c(-2*x[1],1,rep(0,n0-2))
     return(g)
@@ -463,18 +397,18 @@ hess <- function(x) {
     n0 <- length(x)
     ti <- (1:29)/29
     hessian <- matrix(NA,ncol = n0,nrow = n0)
-    
+
     for(j in 1:n0) {
         for (i in 1:j)  {
             hessian[i,j] <- -4*sum(ti^(i+j-2))
             hessian[j,i] <- hessian[i,j]
         }
     }
-    
+
     hessian[1,1] <- 12*x[1]^2-4*x[2]-110
     hessian[1,2] <- -60 - 4*x[1]
     hessian[2,2] <- -4*sum(ti^2) + 2
-    
+
     return(hessian)
 }
 
@@ -669,13 +603,13 @@ colSums(result.31[,c(3,6,9,12)])
 ```{r}
 
 f1 <- function(x) {
-  
+
     n0 <- length(x)
     h <- 1/(1+n0)
     ti <- (1:n0)*h
     X <- c(0,x,0)
     r <- rep(0,n0)
-    
+
     for (i in 1:n0) {
         r[i] <- 2*X[i+1] - X[i] - X[i+2] + h^2*((X[i+1] + ti[i] + 1)^3)/2
     }
@@ -688,7 +622,7 @@ g1 <- function(x) {
     h <- 1/(1+n0)
     ti <- (1:n0)*h
     g <- 3*h^2*(x + ti + 1)^2 + c(2,rep(0,n0-2),2)
-    
+
     return(g)
 }
 
@@ -812,19 +746,19 @@ ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
         while(i <= max.it) {
             i <- i + 1
             alpha.new = start + r
-            
+
             if (alpha.new <= 0) {
                 alpha.new = 0
                 break
             }else if (get.alpha(alpha.new) >= get.alpha(start)) {
                 break
             }
-            
+
             r <- t*r
             alpha <- start
             start <- alpha.new
         }
-        
+
         if(i == 1) {
             r <- -r
             alpha <- alpha.new
@@ -833,28 +767,28 @@ ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
             b <- max(alpha,alpha.new)
             break
         }
-        
+
     }
     return(c(a,b,i))
 }
 
 
 linesearch <- function(f,g,xk,dk, a = 0.1, b=100, alpha0 = 1, precision = 0.001, tau = 0.618, exact = TRUE, method = "0.618", criteria = "Goldstein",rho = 0.0001, sigma = 0.9, max.it = 1000) {
-    
+
     get.alpha <- function(alpha) {
       f(xk+alpha*dk)
     }
-    
+
     i = 1
-    
+
     if(method != "poly")  {
         while(exact && i <= max.it) {
-          
+
             if((b - a) < precision) {
               alpha0 <- (b+a)/2
               break
             }
-            
+
             alpha.l <- a + (1 - tau) * (b - a)
             alpha.u <- a + tau * (b - a)
             if(get.alpha(alpha.l) - get.alpha(alpha.u) < 0) {
@@ -863,88 +797,88 @@ linesearch <- function(f,g,xk,dk, a = 0.1, b=100, alpha0 = 1, precision = 0.001,
               a <- alpha.l
             }
             i = i + 1
-            
+
         }
-      
+
         while(!exact && i<=max.it) {
-          
+
             alpha0 <- (b+a)/2
             fk <- get.alpha(0)
             gd <- t(g(xk))%*%dk
             phi <- get.alpha(alpha0)
-            
+
             if( phi <= fk + rho * gd * alpha0) {
                 if(criteria == "Goldstein") {
                   if(phi >= fk + (1 - rho) * gd * alpha0) {
                     break
                   }
                 }
-                
+
                 if(criteria == "Wolfe") {
                   if(t(g(xk + alpha0*dk))%*%dk >= sigma * gd) {
                     break
                   }
                 }          
-                
+
                 if(criteria == "StrongWolfe") {
                   if(abs(t(g(xk + alpha0*dk))%*%dk) <= - sigma * gd) {
                     break
                   }
                 }     
             }
-          
+
             alpha.l <- a + (1 - tau) * (b - a)
             alpha.u <- a + tau * (b - a)
-            
+
             if(get.alpha(alpha.l) - get.alpha(alpha.u) < 0) {
               b <- alpha.u
             }else {
               a <- alpha.l
             }
-            
+
             i = i + 1
-              
+
         }
     }
-    
+
     if (method == "poly") {
-        
+
         stopifnot(!exact)
-      
+
         fk <- get.alpha(0)
         gd <- (t(g(xk))%*%dk)[1,1]
-        
+
         while(!exact && i<= max.it) {
-          
+
             phi <- get.alpha(alpha0)
-            
+
             if(phi <= fk + rho * gd * alpha0) {
-                
+
                 if(criteria == "Goldstein") {
                   if((phi >= fk + (1 - rho) * gd * alpha0)&& alpha0 >=0) {
                     break
                   }
                 }
-                
+
                 if(criteria == "Wolfe") {
                   if(((t(g(xk + alpha0*dk))%*%dk)[1,1] >= sigma * gd)&& alpha0 >=0) {
                     break
                   }
                 }          
-                
+
                 if(criteria == "StrongWolfe") {
                   if((abs(t(g(xk + alpha0*dk))%*%dk)[1,1] <= - sigma * gd) && alpha0 >=0) {
                     break
                   }
                 }          
             }
-        
+
             i <- i + 1
             alpha0 <- (- gd) * alpha0^2 / (2 * (phi - fk - gd * alpha0))
             if(alpha0 < 0) {alpha0 = 0}
         }
     }
-    
+
     return(c(alpha0,i))
 }
 
@@ -981,7 +915,7 @@ linesearch(f,g,x0,d, alpha = 200,exact = FALSE,method = "poly",criteria = "Stron
 
 
 Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FALSE,ls.method = "0.618",criteria = "Goldstein",rho = 0.0001,sigma = 0.1, r = 3, t = 1.1, v = 1,max= 1000) {
-    
+
     n <- length(x0)
     trace <- matrix(NA,nrow = max, ncol = n)
     trace[1,] <- x0
@@ -989,17 +923,17 @@ Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FAL
     c = 0
     p = 0
     alpha = 1
-    
+
     while(k < max) {
 
         gk <- g(x0)
         Gk <- hess(x0)
         d <- -solve(Gk)%*%gk
-        
+
         if (method == "Damped") {
-            
+
             get.alpha <- function(a1) {f(as.vector(x0+a1*d))[1]}
-            
+
             if(ls.method == "0.618") {
                 region <- ls.region(get.alpha,start = alpha, r = r, t = t,max.it = max)
                 a <- region[1]
@@ -1013,17 +947,17 @@ Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FAL
             }
             p =  p + result.alpha[2]
         }
-        
+
         x1 = x0 + alpha*d
         k = k + 1
         trace[k,] <- x1
-        
+
         if (sum(g(x1)^2) < precision) {
           break
         }
         x0 <- x1
     }
-    
+
     return(list(trace, c(k,c,p)))
 }
 
@@ -1037,9 +971,9 @@ Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALS
     p = 0
     Hk = diag(n)
     alpha = 1
-    
+
     while(k < max) {
-      
+
         gk <- g(x0)
         d <- -Hk%*%gk
         get.alpha <- function(a1) {f(as.vector(x0+a1*d))[1]}
@@ -1055,7 +989,7 @@ Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALS
             result.alpha <- linesearch(f,g,x0,d,alpha0 = alpha,precision = 0.01,method = ls.method,exact = exact,precision = precision,criteria = criteria,rho = rho, sigma = sigma, max.it = max/50)
             alpha <- result.alpha[1]
         }
-        
+
         p = p + result.alpha[2] #line search times
         x1 = x0 + alpha*d
         k = k + 1
@@ -1065,10 +999,10 @@ Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALS
         if (sum(g1^2)< precision) {
           break
         }
-        
+
         sk <- alpha*d
         yk <- g1 - gk
-        
+
         if(method == "SR1") {
             Hk <- Hk + ((sk-Hk%*%yk)%*%t(sk-Hk%*%yk))/(t(sk-Hk%*%yk)%*%yk)[1,1]
         }else if (method =="BFGS") {
@@ -1076,7 +1010,7 @@ Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALS
         }else if (method == "DFP")  {
             Hk <- Hk + (sk%*%t(sk)/(t(sk)%*%yk)[1,1]) - (Hk%*%yk%*%t(yk)%*%Hk/(t(yk)%*%Hk%*%yk)[1,1])
         }
-        
+
         x0 <- x1
     }
     return(list(trace,c(k,c,p)))
@@ -1113,56 +1047,56 @@ f <- function(x) {
     n0 <- length(x)
     ti <- (1:29)/29
     r <- rep(0,31)
-    
+
     r[30] <- x[1]
     r[31] <- x[2] - x[1]^2 - 1
-    
+
     for ( i in 1:29) {
         r2 <- - (sum(t(x)%*%(ti[i]^(c(1:n0-1)))))^2 - 1
         r1 <- 0
-        
+
         for ( j in 2:n0) {
             r1 = r1 + (j-1)*x[j]*ti[i]^(j-2)
         }
-        
+
         r[i] = r1 + r2
     }
-    
+
     return(sum(r^2))
 }
 
 g <- function(x) {
     n0 <- length(x)
     ti <- (1:29)/29
-    
+
     s <- rep(0,29)
     r <- rep(0,31)
     l <- rep(0,n0)
-    
+
     g <- rep(0,n0)
-    
+
     r[30] <- x[1]
     r[31] <- x[2] - x[1]^2 - 1
-    
+
     for ( i in 1:29) {
         s[i] <- sum(t(x) %*% (ti[i]^(c(1:n0-1))))
         r2 <- - (s[i])^2 - 1
         r1 <- 0
-      
+
         for ( j in 2:n0) {
             r1 = r1 + (j-1)*x[j]*ti[i]^(j-2)
         }
-      
+
         r[i] = r1 + r2
     }
-    
+
     for ( i in 1:29)  {
         for (j in 1:n0) {
             l[j] <- (j-1) * ti[i]^(j-1) - 2 * s[i] * ti[i]^(j-1)
         }
         g <- g + 2*r[i]*l
     }
-    
+
     g <- g + c(2*x[1],rep(0,n0-1))
     g <- g + 2*(x[2] - x[1]^2 - 1)*c(-2*x[1],1,rep(0,n0-2))
     return(g)
@@ -1172,18 +1106,18 @@ hess <- function(x) {
     n0 <- length(x)
     ti <- (1:29)/29
     hessian <- matrix(NA,ncol = n0,nrow = n0)
-    
+
     for(j in 1:n0) {
         for (i in 1:j)  {
             hessian[i,j] <- -4*sum(ti^(i+j-2))
             hessian[j,i] <- hessian[i,j]
         }
     }
-    
+
     hessian[1,1] <- 12*x[1]^2-4*x[2]-110
     hessian[1,2] <- -60 - 4*x[1]
     hessian[2,2] <- -4*sum(ti^2) + 2
-    
+
     return(hessian)
 }
 
@@ -1647,13 +1581,13 @@ save(result.all,file = "experiment1.Rdata")
 
 
 f1 <- function(x) {
-  
+
     n0 <- length(x)
     h <- 1/(1+n0)
     ti <- (1:n0)*h
     X <- c(0,x,0)
     r <- rep(0,n0)
-    
+
     for (i in 1:n0) {
         r[i] <- 2*X[i+1] - X[i] - X[i+2] + h^2*((X[i+1] + ti[i] + 1)^3)/2
     }
@@ -1666,7 +1600,7 @@ g1 <- function(x) {
     h <- 1/(1+n0)
     ti <- (1:n0)*h
     g <- 3*h^2*(x + ti + 1)^2 + c(2,rep(0,n0-2),2)
-    
+
     return(g)
 }
 
@@ -2142,4 +2076,3 @@ colSums(result.31[,c(2,4,6,8)])
 result.all <- list(result,result.10,result.20,result.31)
 save(result.all,file = "experiment2.Rdata")
 ```
-
