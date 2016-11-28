@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Quasi-Newton"
-date:   2016-11-28 21:00:00
+date:  2016-11-28 21:00:00
 tag:
 - 中文
 - Code
@@ -9,7 +9,6 @@ projects: true
 blog: false
 author: Jannis
 description: Quasi-Newton Methods with comparisons
-fontsize: 23pt
 ---
 
 {% include mathjax_support.html %}
@@ -29,7 +28,7 @@ fontsize: 23pt
 * 按照算法，并且限制了最大循环次数max.it
 * 返回区间上下限a,b以及循环次数i
 
-```{r}
+```
 
 ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
 
@@ -77,7 +76,7 @@ ls.region <- function(get.alpha,start = 5, r = 0.8,t = 1.5, max.it = 1000) {
 * method可以为0.618法或者Poly二项插值法（alpha0为初始值）
 * 返回一个长度为2的向量，表示步长与循环次数。
 
-```{r}
+```
 
 linesearch <- function(f,g,xk,dk, a = 0.1, b=100, alpha0 = 1, precision = 0.001, tau = 0.618, exact = TRUE, method = "0.618", criteria = "Goldstein",rho = 0.0001, sigma = 0.9, max.it = 1000) {
 
@@ -203,7 +202,8 @@ linesearch <- function(f,g,xk,dk, a = 0.1, b=100, alpha0 = 1, precision = 0.001,
 * max为最大循环次数
 * 输出trace表示每次更新的值、k表示循环次数，c表示区间搜索总循环次数，p表示线搜索总循环次数
 
-```{r}
+
+```
 
 Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FALSE,ls.method = "0.618",criteria = "Goldstein",rho = 0.0001,sigma = 0.1, r = 3, t = 1.1, v = 1,max= 1000) {
 
@@ -266,7 +266,7 @@ Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FAL
 * max为最大循环次数
 * 输出trace表示每次更新的值、k表示循环次数，c表示区间搜索总循环次数，p表示线搜索总循环次数
 
-```{r}
+```
 
 Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALSE,ls.method = "0.618",criteria = "Goldstein",rho = 0.0001,sigma = 0.1, r = 3, t = 1.1, v = 1,max= 1000) {
     n <- length(x0)
@@ -347,7 +347,7 @@ $$r_{i}(x) = 2x_i -x_{i-1} - x_{i+1} + h^2(x_i + t_i + 1)^{3}/2$$
 
 # Appendix
 
-```{r}
+```
 
 ############
 ##Comparison
@@ -572,114 +572,5 @@ hess1 <- function(x) {
     ti <- (1:n0)*h
     return(diag(6*h^2*(x + ti + 1)))
 }
-
-
-
-
-#######################################n0 = 4#############################################
-n0 <- 4
-h <- 1/(1+n0)
-ti <- (1:n0)*h
-x0 <- (ti*(ti-1))
-
-#simple.newton<- Newton(f,g,hess,x0,method = "Newton",precision = 0.01,exact = FALSE, criteria = "Goldstein",max = 10000)
-#singular matrix! when exact = FALSE/TRUE (either criteria)
-
-#damped <-Newton(f,g,hess,x0,method = "Damped",precision = 0.01,exact = TRUE, criteria = "Goldstein",rho = 0.0001,sigma = 0.9,max = 1000)
-#singular matrix!
-
-#exact
-sr1.2 <- Quasi.Newton(f1,g1,x0,method = "SR1",precision = 0.01, exact = TRUE, max = 1000)
-sr1.2.time <- sr1.2[[2]]
-sr1.2 <- sr1.2[[1]]
-rs.sr1.2 <- sr1.2[!is.na(sr1.2[,1]),]
-tail(rs.sr1.2)
-
-#exact
-bfgs.2 <- Quasi.Newton(f1,g1,x0,method = "BFGS",precision = 0.01, exact = TRUE, max = 1000)
-bfgs.2.time <- bfgs.2[[2]]
-bfgs.2 <- bfgs.2[[1]]
-rs.bfgs.2 <- sr1.2[!is.na(bfgs.2[,1]),]
-tail(rs.bfgs.2)
-
-#exact
-dfp.2 <- Quasi.Newton(f1,g1,x0,method = "DFP",precision = 0.01, exact = TRUE, max = 1000)
-dfp.2.time <- dfp.2[[2]]
-dfp.2 <- dfp.2[[1]]
-rs.dfp.2 <- dfp.2[!is.na(dfp.2[,1]),]
-tail(rs.dfp.2)
-
-#SR1 nonexact
-sr1.g <- Quasi.Newton(f1,g1,x0,method = "SR1",precision = 0.01, exact = FALSE, criteria = "Goldstein", rho = 0.0001,sigma = 0.5,max=1000)
-sr1.g.time <- sr1.g[[2]]
-sr1.g <- sr1.g[[1]]
-rs.sr1.g <- sr1.g[!is.na(sr1.g[,1]),]
-tail(rs.sr1.g)
-
-sr1.w <- Quasi.Newton(f1,g1,x0,method = "SR1",precision = 0.01, exact = FALSE, criteria = "Wolfe", rho = 0.0001,sigma = 0.5, max = 1000)
-sr1.w.time <- sr1.w[[2]]
-sr1.w <- sr1.w[[1]]
-rs.sr1.w <- sr1.w[!is.na(sr1.w[,1]),]
-tail(rs.sr1.w)
-
-sr1.sw <- Quasi.Newton(f1,g1,x0,method = "SR1",precision = 0.01, exact = FALSE, criteria = "StrongWolfe", rho = 0.0001,sigma = 0.5, max = 1000)
-sr1.sw.time <- sr1.sw[[2]]
-sr1.sw <- sr1.sw[[1]]
-rs.sr1.sw <- sr1.sw[!is.na(sr1.sw[,1]),]
-tail(rs.sr1.sw)
-
-#BFGS nonexact
-bfgs.g <- Quasi.Newton(f1,g1,x0,method = "BFGS",precision = 0.01, exact = FALSE, criteria = "Goldstein", rho = 0.0001,sigma = 0.5, max = 1000)
-bfgs.g.time <- bfgs.g[[2]]
-bfgs.g <- bfgs.g[[1]]
-rs.bfgs.g <- bfgs.g[!is.na(bfgs.g[,1]),]
-tail(rs.bfgs.g)
-
-bfgs.w <- Quasi.Newton(f1,g1,x0,method = "BFGS",precision = 0.01, exact = FALSE, criteria = "Wolfe", rho = 0.0001,sigma = 0.5, max = 1000)
-bfgs.w.time <- bfgs.w[[2]]
-bfgs.w <- bfgs.w[[1]]
-rs.bfgs.w <- bfgs.w[!is.na(bfgs.w[,1]),]
-tail(rs.bfgs.w)
-
-bfgs.sw <- Quasi.Newton(f1,g1,x0,method = "BFGS",precision = 0.01, exact = FALSE, criteria = "StrongWolfe", rho = 0.0001,sigma = 0.5, max = 1000)
-bfgs.sw.time <- bfgs.sw[[2]]
-bfgs.sw <- bfgs.sw[[1]]
-rs.bfgs.sw <- bfgs.sw[!is.na(bfgs.sw[,1]),]
-tail(rs.bfgs.sw)
-
-#DFP nonexact
-dfp.g <- Quasi.Newton(f1,g1,x0,method = "DFP",precision = 0.01, exact = FALSE, criteria = "Goldstein", rho = 0.0001,sigma = 0.5, max = 1000)
-dfp.g.time <- dfp.g[[2]]
-dfp.g <- dfp.g[[1]]
-rs.dfp.g <- dfp.g[!is.na(dfp.g[,1]),]
-tail(rs.dfp.g)
-
-dfp.w <- Quasi.Newton(f1,g1,x0,method = "DFP",precision = 0.01, exact = FALSE, criteria = "Wolfe", rho = 0.0001,sigma = 0.5, max = 1000)
-dfp.w.time <- dfp.w[[2]]
-dfp.w <- dfp.w[[1]]
-rs.dfp.w <- dfp.w[!is.na(dfp.w[,1]),]
-tail(rs.dfp.w)
-
-dfp.sw <- Quasi.Newton(f1,g1,x0,method = "DFP",precision = 0.01, exact = FALSE, criteria = "StrongWolfe", rho = 0.0001,sigma = 0.5, max = 1000)
-dfp.sw.time <- dfp.sw[[2]]
-dfp.sw <- dfp.sw[[1]]
-rs.dfp.sw <- dfp.sw[!is.na(dfp.sw[,1]),]
-tail(rs.dfp.sw)
-
-feva1 <- c(sum(sr1.2.time[2:3]),sum(bfgs.2.time[2:3]),sum(dfp.2.time[2:3]))
-exact <- c(sr1.2.time[1],bfgs.2.time[1],dfp.2.time[1])
-feva2 <- c(sum(sr1.g.time[2:3]),sum(bfgs.g.time[2:3]),sum(dfp.g.time[2:3]))
-gs <- c(sr1.g.time[1],bfgs.g.time[1],dfp.g.time[1])
-feva3 <- c(sum(sr1.w.time[2:3]),sum(bfgs.w.time[2:3]),sum(dfp.w.time[2:3]))
-wf <- c(sr1.w.time[1],bfgs.w.time[1],dfp.w.time[1])
-feva4 <- c(sum(sr1.sw.time[2:3]),sum(bfgs.sw.time[2:3]),sum(dfp.sw.time[2:3]))
-swf <- c(sr1.sw.time[1],bfgs.sw.time[1],dfp.sw.time[1])
-
-result <- data.frame(feva1,exact,feva2,gs,feva3,wf,feva4,swf)
-rownames(result) <- c("SR1","BFGS","DFP")
-colnames(result) <- c("feva","Exact","feva","Goldstein","feva","Wolfe","feva","StrongWolfe")
-result
-colSums(result)
-rowSums(result)
 
 ```
