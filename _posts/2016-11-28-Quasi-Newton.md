@@ -264,6 +264,7 @@ Newton <- function(f,g,hess,x0,method = "Newton",precision = 0.00001,exact = FAL
 * 输出trace表示每次更新的值、k表示循环次数，c表示区间搜索总循环次数，p表示线搜索总循环次数
 
 ```{r}
+
 Quasi.Newton <-  function(f,g,x0,method = "SR1",precision = 0.00001,exact = FALSE,ls.method = "0.618",criteria = "Goldstein",rho = 0.0001,sigma = 0.1, r = 3, t = 1.1, v = 1,max= 1000) {
     n <- length(x0)
     trace <- matrix(NA,nrow = max, ncol = n)
