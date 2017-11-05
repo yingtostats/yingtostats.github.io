@@ -4,7 +4,7 @@ layout: page
 ---
 ![Profile Image]({{ site.url }}/{{ site.picture }})
 
-### Jannis Ying Zhang's Brief Biography
+### Ying Zhang's Brief Biography
 <font size="3.5">
 <blockquote>
 <p>The life I want, there is no shortcuts. - Jenny <i>An Education</i> </p>

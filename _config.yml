@@ -1,5 +1,5 @@
 # main text of home
-name: Jannis Ying Zhang
+name: Ying Zhang
 bio: Life is short, but I would rather live it slow.
 
 # twitter summary info
@@ -49,7 +49,7 @@ email: zyjannis@gmail.com
 
 authors:
     Jannis:
-        name: Jannis Ying Zhang
+        name: Ying Zhang
         bio: A statistician who gets lost in analysis.
         external-image: false
         picture: assets/images/profile.jpg
