@@ -1,13 +1,13 @@
 ---
 layout: post
 title:  "Statistics Asymptotic Theory"
-date:   2016-09-15 09:44:00
+date:   2019-12-31 23:59:59
 tag:
 - Statistics
 - Notes
 blog: true
 author: Ying
-description: My first Blog
+description: Asymptotic Theory
 fontsize: 20pt
 ---
 
@@ -57,7 +57,7 @@ These notes are from STAT 553 Asymptotic Theory by Professor Jogesh Babu in a wr
 [Note 10](https://drive.google.com/file/d/1frY9xD2jyMCp44DFfuXtzVvbM2Dfviwx/view?usp=sharing "Google Drive Doc")
 
 
-### Jackknife's consistency, Bootstrap Method
+### Jackknife's Consistency, Bootstrap Method
 
 [Note 11](https://drive.google.com/file/d/1KAcPt06Ejra5oL9qBoA-5dfoTcW7sAM1/view?usp=sharing "Google Drive Doc")
 
