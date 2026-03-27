@@ -1,6 +1,6 @@
 # main text of home
 name: Ying Zhang
-bio: Embrace Uncertainties.
+bio: Ride with Uncertainties.
 # twitter summary info
 description: Data-Scientist-to-be
 
@@ -44,12 +44,12 @@ linkedin: yingsight
 #reddit: username
 #medium: medium
 #vimeo: myvimeo
-email: your_email@example.com
+email: yingstatpsu@gmail.com
 
 authors:
   YingZhang:
     name: Ying Zhang
-    bio: A statistician who gets lost in analysis.
+    bio: Ride with Uncertainties.
     external-image: false
     picture: assets/images/profile.jpg
     # twitter: your_twitter

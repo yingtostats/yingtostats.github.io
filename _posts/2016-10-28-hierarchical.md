@@ -15,8 +15,6 @@ fontsize: 23pt
 
 {% include mathjax_support.html %}
 
-[Data Mining Center](http://www.rucdmc.net), Renmin University of China
-
 ## Introduction to Bayesian Framework
 
 ### Prior, Likelihood, and Posterior
@@ -66,7 +64,7 @@ What priors are often used in practice?
 * Definition: prior and posterior belong to the same family.
 * Example:
 $$
-\theta \sim \text{Beta}(\alpha,\beta),\qquad y \mid \theta \sim \text{Binomial}(n,\theta)
+	heta \sim \text{Beta}(\alpha,\beta),\qquad y \mid \theta \sim \text{Binomial}(n,\theta)
 $$
 Then
 $$
@@ -75,7 +73,7 @@ p(\theta \mid y) \propto p(y \mid \theta)p(\theta)
 $$
 so
 $$
-\theta \mid y \sim \text{Beta}(\alpha+y,\beta+n-y)
+	heta \mid y \sim \text{Beta}(\alpha+y,\beta+n-y)
 $$
 
 
@@ -105,7 +103,7 @@ p(\theta \mid y) \propto p(y \mid \theta) \propto \exp\left(-\frac{(y-\theta)^2}
 $$
 so
 $$
-\theta \mid y \sim N(y,1)
+	heta \mid y \sim N(y,1)
 $$
 which is a proper posterior.
 
@@ -151,11 +149,11 @@ y_i \mid \theta_i \sim \text{Binomial}(n_i,\theta_i)
 $$
 * Prior model:
 $$
-\theta_i \sim \text{Beta}(\alpha,\beta)
+	heta_i \sim \text{Beta}(\alpha,\beta)
 $$
 * Posterior for each group:
 $$
-\theta_i \mid y_i \sim \text{Beta}(\alpha+y_i,\beta+n_i-y_i)
+	heta_i \mid y_i \sim \text{Beta}(\alpha+y_i,\beta+n_i-y_i)
 $$
 
 
@@ -189,7 +187,7 @@ Do we have to use data to set the hyperparameters?
 * Often, scientific prior information is limited.
 * A default choice is a weakly informative or non-informative prior, such as
 $$
-\theta_i \sim \text{Uniform}(0,1)=\text{Beta}(1,1)
+	heta_i \sim \text{Uniform}(0,1)=\text{Beta}(1,1)
 $$
 with
 $$
@@ -205,7 +203,7 @@ $$
 y_i \mid \theta_i \sim \text{Binomial}(n_i,\theta_i)
 $$
 $$
-\theta_i \mid \alpha,\beta \sim \text{Beta}(\alpha,\beta)
+	heta_i \mid \alpha,\beta \sim \text{Beta}(\alpha,\beta)
 $$
 $$
 \alpha \sim \text{Gamma}(a_\alpha,b_\alpha),\qquad
@@ -255,7 +253,7 @@ $$
 $$
 * For each document $d$, draw topic mixture
 $$
-\theta_d \sim \text{Dirichlet}(\alpha)
+	heta_d \sim \text{Dirichlet}(\alpha)
 $$
 * For each word position $n$ in document $d$:
 $$
