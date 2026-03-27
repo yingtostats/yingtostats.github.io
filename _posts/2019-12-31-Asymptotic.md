@@ -6,19 +6,19 @@ tag:
 - Statistics
 - Notes
 blog: true
-author: Ying
+author: YingZhang
 description: Asymptotic Theory
 fontsize: 20pt
 ---
 
-These notes are from STAT 553 Asymptotic Theory by Professor Jogesh Babu in a written format with details of proofs and examples in statistics asymptotic theory.
+These notes are from STAT 553 Asymptotic Theory by Professor Jogesh Babu, written with detailed proofs and examples in asymptotic statistics.
  {% include mathjax_support.html %}
 
-### Probability, Borel-Cantelli Lemma, Probability Inequalities, Convergence, Dominated Covergence Theorem
+### Probability, Borel-Cantelli Lemma, Probability Inequalities, Convergence, Dominated Convergence Theorem
 
 [Note 1](https://drive.google.com/file/d/1cpcfc7BSyuMjMSFZHXXVb1tGFtXd61Ua/view?usp=sharing "Google Drive Doc")
 
-### Law of Large Numbers, Characteristics Functions 
+### Law of Large Numbers, Characteristic Functions
 
 [Note 2](https://drive.google.com/file/d/1qn0zCz8ATQDix45RkJ7yd78eyw0_pYhK/view?usp=sharing "Google Drive Doc")
 

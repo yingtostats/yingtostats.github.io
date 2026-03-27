@@ -30,29 +30,29 @@ analytics-google: 'UA-130961615-1'
 disqus: yingsight
 
 # if you don't have any of social below, comment the line
-facebook: 100010323219437
-twitter: jannis1202
+# facebook: your_facebook_id
+# twitter: your_twitter
 # google: mygoogle
-instagram: zyjannis
+# instagram: your_instagram
 # pinterest: mypinterest
 linkedin: yingsight
 #youtube: myyoutube
 #spotify: myspotify
-github: yingtostats
+# github: your_github
 #stackoverflow: 7044681/mystackoverflow
 #quora: userquora
 #reddit: username
 #medium: medium
 #vimeo: myvimeo
-email: zyjannis@gmail.com
+email: your_email@example.com
 
 authors:
-    Jannis:
-        name: Ying Zhang
-        bio: A statistician who gets lost in analysis.
-        external-image: false
-        picture: assets/images/profile.jpg
-        twitter: jannis1202
+  YingZhang:
+    name: Ying Zhang
+    bio: A statistician who gets lost in analysis.
+    external-image: false
+    picture: assets/images/profile.jpg
+    # twitter: your_twitter
 # do you want a larger site? change the option below
 # options: [normal, large] | default: normal
 # normal = 560px / large = 810px
@@ -63,7 +63,7 @@ width: large
 # paginate_path: "blog/:num/"
 
 # if you don't need projects, comment the *projects* configs below
-projects: true
+projects: false
 
 # if you don't need "about" or "blog", comment them out below
 about: true

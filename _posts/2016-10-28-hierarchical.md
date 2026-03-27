@@ -6,8 +6,8 @@ tag:
 - Statistics
 - Bayesian
 projects: true
-blog: false
-author: Jannis
+blog: true
+author: YingZhang
 description: Hierarchical Model and Latent Dirichlet Allocation
 fontsize: 23pt
 
@@ -19,49 +19,43 @@ fontsize: 23pt
 
 ## Introduction to Bayesian Framework
 
-### Priori, Likelihood and Posteriori
+### Prior, Likelihood, and Posterior
 
-
-*  Bayes Formula $$p(\theta\mid y) = \frac{p(\theta)p(y\mid\theta)}{p(y)}$$
-*  Prior $\theta$ $\sim$ Prior Distribution $p(\theta)$
-Determined from past information or subjective assessment.
-*  Observations $y\mid \theta$ $\sim$ Likelihood $p(y \mid \theta)$
-Given the parameter $\theta$, the observed data $y$'s distribution.
-*  Posterior $\theta \mid y$ $\sim$ Posterior Distribution $p(\theta \mid y)$
-Updatad distribution of $\theta$ based on its prior and observed data.
-*  $$p(\theta \mid y) = \frac{p(\theta)p(y\mid \theta)}{\int p(\theta)p(y\mid \theta) d\theta} \propto p(\theta)p(y\mid \theta)$$
+* Bayes' rule:
+$$
+p(\theta \mid y) = \frac{p(\theta)p(y \mid \theta)}{p(y)}
+$$
+* Prior: $\theta \sim p(\theta)$, which encodes existing knowledge or beliefs.
+* Likelihood: $y \mid \theta \sim p(y \mid \theta)$, which describes data generation under parameter $\theta$.
+* Posterior: $\theta \mid y \sim p(\theta \mid y)$, which updates beliefs after seeing data.
+* Up to a normalizing constant:
+$$
+p(\theta \mid y) \propto p(y \mid \theta)p(\theta)
+$$
 
 
 
 ## Types of Prior
 
-What exactly is prior when we talk about it?
+Where can prior information come from?
 
-*  Past experience
-*  Historical Research
-*  Subjective Beliefs
+* Past experience
+* Historical studies
+* Expert knowledge
 
+Common categories of priors:
 
-We can define three types of priors according to the information they contain
-
-*  Informative Priors
-Prior distributions giving numerical information that is crucial to estimation of the model.
-*  Non-informative Priors
-Uniform or nearly so, and basically allow the information from the likelihood to be interpreted probabilistically.
-*  Weakly Informative Priors
-Not supplying any controversial information but are strong enough to pull the data away from inappropriate inferences that are consistent with the likelihood.
+* Informative priors: carry substantial domain information.
+* Weakly informative priors: regularize estimates without being overly restrictive.
+* Non-informative (or reference) priors: aim to minimize prior influence.
 
 
 ### Common Types of Priors
-What kinds of prior do we usally use?
+What priors are often used in practice?
 
-*  Experts' Prior
-Prior distributions obtained via consulting experts.
-*  Conjugate Priors
-The prior distribution and the posterior distribution are from the same distribution family.
-For example, if $\theta \sim $beta distribution then $\theta\mid y \sim beta$ distribution
-*  Non-informative Priors
-Uniform Prior or Jeffrey Prior
+* Expert priors: elicited from subject-matter experts.
+* Conjugate priors: posterior stays in the same distribution family as the prior.
+* Non-informative priors: for example, uniform or Jeffreys priors.
 
 
 
@@ -69,53 +63,67 @@ Uniform Prior or Jeffrey Prior
 
 #### Conjugate Prior
 
-*  The prior distribution and the posterior distribution are from the same distribution family.
-*  Example : $$\theta \sim \text{Beta}(\alpha,\beta) \quad p(\theta) \propto \theta^{\alpha -1}(1 - \theta)^{\beta - 1} \quad \theta \in (0,1) $$
-$$y\mid \theta \sim \text{Binomial}(n,\theta) \quad \quad p(y\mid \theta) \propto \theta^{y}(1 - \theta)^{n-y}$$
-*  Hence we can derive the posterior $$p(\theta\mid y) \propto p(y\mid \theta)\cdot p(\theta) \propto \theta^{\alpha + y -1}(1 - \theta)^{\beta +n - y - 1}$$
-Therefore, $$\theta \mid y \sim \text{Beta}(\alpha + y,\beta +n - y) \quad \theta \in (0,1) $$
-*  $\theta$'s prior and posterior are both Beta distribution.
+* Definition: prior and posterior belong to the same family.
+* Example:
+$$
+	heta \sim \text{Beta}(\alpha,\beta),\qquad y \mid \theta \sim \text{Binomial}(n,\theta)
+$$
+Then
+$$
+p(\theta \mid y) \propto p(y \mid \theta)p(\theta)
+\propto \theta^{\alpha+y-1}(1-\theta)^{\beta+n-y-1}
+$$
+so
+$$
+	heta \mid y \sim \text{Beta}(\alpha+y,\beta+n-y)
+$$
 
 
 
 
 ##### Why we use Conjugate Prior?
 
-*  They simplify the computation!
-We can easily derive the posterior distribution if we use conjugate prior.
-*  Common Conjugate Families
+* They simplify posterior computation and interpretation.
+* They are useful for quick analytical checks and teaching examples.
 
 
 
 
 #### Non-informative Prior
 
-*  Uniform $$p(\theta) \propto 1$$
-*  Example 1: $$p(\theta) = \frac{1}{2} \quad \quad \theta \in (0,2) $$
-*  Example 2: $$p(\theta) \propto 1 \quad \quad \theta \in (-\infty,\infty) $$
-Is that correct?
-*  Prior is not a distribution! Its density cannot be integrated to 1.
-We call this prior is  **improper**.
-*  Improper prior can **sometimes** lead to proper posterior.
-*  As long as it can lead to proper posterior, the prior can be useful.
-*  Example 3: $$p(\theta) \propto 1 \quad \quad \theta \in (-\infty,\infty) $$
-$$y\mid \theta \sim N(\theta, 1)$$
-*  Hence we can derive the posterior $$p(\theta\mid y) \propto p(y\mid \theta)\cdot 1 = \frac{1}{\sqrt{2\pi}}e^{-\frac{(\theta - y)^2}{2}}$$
-Therefore, $$\theta \mid y \sim N(y,1) \quad \theta \in (-\infty,\infty) $$
-*  It's a proper posterior!
+* A common non-informative choice is $p(\theta) \propto 1$.
+* On an unbounded domain, this is an improper prior (it does not integrate to 1).
+* Improper priors can still be useful if they produce a proper posterior.
+
+Example:
+$$
+p(\theta) \propto 1,\qquad y \mid \theta \sim N(\theta,1)
+$$
+Then
+$$
+p(\theta \mid y) \propto p(y \mid \theta) \propto \exp\left(-\frac{(y-\theta)^2}{2}\right)
+$$
+so
+$$
+	heta \mid y \sim N(y,1)
+$$
+which is a proper posterior.
 
 
 
 
-##### Jeffrey Prior
+##### Jeffreys Prior
 
-*  Do we have any other choice for non-informative prior?
-*  Yes! That is Jeffrey Prior.
-*  $$p(\theta) \propto [J(\theta)]^{\frac{1}{2}}$$ where $J(\theta)$ is the {\em Fisher Information} for $\theta$
-$$J(\theta) = E((\frac{d logp(y\mid \theta)}{d\theta})^2\mid \theta)= - E(\frac{d^{2} logp(y\mid \theta)}{d\theta^{2}}\mid \theta)$$
-*  Jeffrey's Invariance Principal:
-No matter how I parametrize $\theta$, the prior density $p(\theta)$ is equivalent.
-*   $$p(\theta) \propto [J(\theta)]^{\frac{1}{2}} \quad \text{Let} \quad \phi = h(\theta) \quad \text{One-to-One mapping}$$ We can prove that $$p(\phi) \propto [J(\phi)]^{\frac{1}{2}}$$
+* Another reference prior is Jeffreys prior:
+$$
+p(\theta) \propto \sqrt{J(\theta)}
+$$
+where $J(\theta)$ is Fisher information:
+$$
+J(\theta)=\mathbb{E}\left[\left(\frac{\partial}{\partial\theta}\log p(y\mid\theta)\right)^2\middle\vert\theta\right]
+= -\mathbb{E}\left[\frac{\partial^2}{\partial\theta^2}\log p(y\mid\theta)\middle\vert\theta\right]
+$$
+* Key property (invariance): under a one-to-one reparameterization $\phi = h(\theta)$, Jeffreys prior remains form-invariant.
 
 
 
@@ -123,133 +131,172 @@ No matter how I parametrize $\theta$, the prior density $p(\theta)$ is equivalen
 
 ## Bayesian Hierarchical Model
 
-
-
 ### How to set the Hyperparameters?
 
-figure missing
+Consider a classic example: tumor incidence in rat studies (Tarone, 1982).
 
-*  The table displays the values of $\frac{y_{i}}{n_{i}}$ : $i = 1,2,3,...,70$
- \centering{(number of rats with tumor) / (total number of rats)}
-*  Tumor Incidence of rats in historical control groups and current group of rats, from Tarone (1982).
+* Let $y_i$ be the number of rats with tumor in group $i$.
+* Let $n_i$ be the total rats in group $i$.
+* We observe rates $y_i/n_i$ across many groups.
+
+The key question is how to set the prior hyperparameters in a principled way.
 
 
 #### Model Initialization
 
-*  Suppose $\theta$ is the probability that the rat had tumor.
-*  Suppose $$y \mid \theta \sim \text{Binomial}(n,\theta)$$
-*  $$\theta \sim \text{Beta}(\alpha, \beta)$$
-*  Since Beta-Binomial is conjugate, so we can derive the posterior of $\theta$ easily
-*  $$\theta\mid y \sim \text{Beta}(\alpha + y, \beta + n - y)$$
+* Let $\theta_i$ be the tumor probability for group $i$.
+* Sampling model:
+$$
+y_i \mid \theta_i \sim \text{Binomial}(n_i,\theta_i)
+$$
+* Prior model:
+$$
+	heta_i \sim \text{Beta}(\alpha,\beta)
+$$
+* Posterior for each group:
+$$
+	heta_i \mid y_i \sim \text{Beta}(\alpha+y_i,\beta+n_i-y_i)
+$$
 
 
 #### Toy Example
-* How to set the $\alpha$ and $\beta$?
-* We call the parameters in prior distribution *hyperparameter*.
+* How should we choose $\alpha$ and $\beta$?
+* These parameters are called hyperparameters.
 
 #### How to set the priors?
 
 ##### Fixed Prior Distribution
-Informative Prior
-*  We knew that $\theta \sim$ Beta Distribution with known mean and variance.
-*  $\theta$ vary due to differences in rats and experimental conditions.
-*  Find the corresponding $\alpha$, $\beta$.
-*  $\theta \sim$ Beta$(\alpha,\beta)$ as its prior distribution.
+
+Informative prior:
+
+* Suppose prior mean $m$ and variance $v$ are known from domain knowledge.
+* Match moments to Beta$(\alpha,\beta)$:
+$$
+\alpha = m\left(\frac{m(1-m)}{v}-1\right),\qquad
+\beta = (1-m)\left(\frac{m(1-m)}{v}-1\right)
+$$
 
 ##### Approximate estimate using Historical Data
 
-*  Use Historical Data's Mean and Variance to estimate $\alpha$ and $\beta$.
-*  $$y_i \mid \theta \sim Binomial(n_i, \theta)$$
-$$\theta \sim \text{Beta}(\hat{\alpha},\hat{\beta})$$
-*  $\theta\mid y_1, y_2,\ldots,y_{71} \sim \text{Beta}(\hat{\alpha} + \sum_{i = 1}^{71} y_i ,\hat{\beta} + \sum_{i = 1}^{71}n_{i} -  \sum_{i = 1}^{71} y_i)$
-
-*  Bayes Estimate $$\begin{aligned}&E\{\theta \mid y\}
-&= \frac{\hat{\alpha} +  \sum_{i = 1}^{71} y_i}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}}
-&= \frac{\hat{\alpha}}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}} +  \frac{ \sum_{i = 1}^{71} y_i}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}}
-&= (\frac{\hat{\alpha}}{\hat{\alpha} +\hat{\beta}})(\frac{\hat{\alpha} + \hat{\beta}}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}}) + (\frac{\sum_{i = 1}^{71} y_i}{\sum_{i = 1}^{71}n_{i}})(\frac{\sum_{i = 1}^{71}n_{i}}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}})
-&=  (\frac{\sum_{i = 1}^{70} y_i}{\sum_{i = 1}^{70}n_{i}})(\frac{\hat{\alpha} + \hat{\beta}}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}}) + (\frac{\sum_{i = 1}^{71} y_i}{\sum_{i = 1}^{71}n_{i}})(\frac{\sum_{i = 1}^{71}n_{i}}{\hat{\alpha} +\hat{\beta} + \sum_{i = 1}^{71}n_{i}})
-\end{aligned}$$
-*  Is that Correct?
-*  NO!
-*  Overestimate the precision of the posterior. (Data Used Twice)
+* Empirical Bayes idea: estimate $\alpha,\beta$ from historical groups, then plug them into the prior.
+* This can work well in practice, but be careful about using the same data twice.
+* If the same data are used to both estimate hyperparameters and update the posterior, uncertainty may be underestimated.
 
 ##### Set the Hyperparameters without Data
 
 Do we have to use data to set the hyperparameters?
 
-*  In most cases in reality, we are not sure what how to set the priors scientifically.
-*  However, the hyperparameters of the prior may not be that important.
-*  If lacking information, use non-informative prior such as $Uniform(0,1) = Beta(1,1)$
-*  In this case,
-$$y_i \mid \theta_i \sim \text{Binomial}(n_i,\theta_i) $$
-$$\theta_i \sim \text{Uniform}(0,1)$$ for $i = 1,2,...,70,71$
+* Often, scientific prior information is limited.
+* A default choice is a weakly informative or non-informative prior, such as
+$$
+	heta_i \sim \text{Uniform}(0,1)=\text{Beta}(1,1)
+$$
+with
+$$
+y_i \mid \theta_i \sim \text{Binomial}(n_i,\theta_i)
+$$
 
 ##### Can we regard hyperparameters in prior as random variables?
 
-Set one more level of Hierarchical Model
+Yes. This is exactly the hierarchical Bayesian approach.
 
-Regard $\alpha$ \& $\beta$ as Random Variables
-
-*  If we want to model the uncertainty of $\alpha$ and $\beta$,
-*  We can assign a prior distributions for $\alpha$ and $\beta$ respectively.
-*  Just add one more level of Hierarchical Model.
-*  For example,
-$$y_i \mid \theta_i \sim \text{Binomial}(n_i,\theta_i) $$
-$$\theta_i \mid \alpha, \beta \sim \text{Beta}(\alpha,\beta)$$
-$$\alpha \sim Gamma(1,2) \text{ , } \beta \sim Gamma(3,4)$$  for $i = 1,2,...,70,71$
-*  The level of this model increased from 2 to 3.
-*  This is Hierarchical Model.
+* Add one more level:
+$$
+y_i \mid \theta_i \sim \text{Binomial}(n_i,\theta_i)
+$$
+$$
+	heta_i \mid \alpha,\beta \sim \text{Beta}(\alpha,\beta)
+$$
+$$
+\alpha \sim \text{Gamma}(a_\alpha,b_\alpha),\qquad
+\beta \sim \text{Gamma}(a_\beta,b_\beta)
+$$
+* This model propagates hyperparameter uncertainty into posterior inference.
+* It also enables partial pooling across groups, which stabilizes noisy group-level estimates.
 
 ## Latent Dirichlet Allocation
 
-*  A classic example of Hierarchical Model
-*  Analyze the model of Text Data
+* LDA is a classic hierarchical Bayesian model for text.
+* It represents each document as a mixture of latent topics.
 
 ### Model Initialization
 
 #### From Beta Distribution to Dirichlet
 
-*  Beta-Binomial is a conjugate distribution.
-*  $$f(x\mid \alpha, \beta) = \frac{1}{\text{Beta}(\alpha,\beta)}x^{\alpha - 1}(1-x)^{\beta - 1}$$ for $x \in (0,1)$
-*  Dirichlet-Multinomial is a conjugate distribution
-*  $$f(x_1, x_2, ... , x_n \mid \alpha_1, ...,\alpha_n) = \frac{\Gamma (\alpha_1 + ... + \alpha_n)}{\Gamma (\alpha_1)...\Gamma (\alpha_n)}x_{1}^{\alpha_1 - 1}x_{2}^{\alpha_2 - 1}...x_{n}^{\alpha_n - 1}$$
-*  $x_1,x_2,...,x_{n-1} \in (0,1) , x_1+x_2+...+x_{n-1} < 1 , x_n = 1 - (x_1 + ... + x_{n-1})$
-*  $$ \text{Dir}(\vec{p} \mid \vec{\alpha}) \times \text{MultiCount}(\vec{n}) =  \text{Dir}(\vec{p} \mid \vec{\alpha} + \vec{n})$$
+* Beta-Binomial is a 2-category conjugate pair.
+* Dirichlet-Multinomial generalizes this to multiple categories.
+* If
+$$
+\vec{p} \sim \text{Dir}(\vec{\alpha}),\qquad
+\vec{n} \mid \vec{p} \sim \text{Multinomial}(N,\vec{p})
+$$
+then
+$$
+\vec{p} \mid \vec{n} \sim \text{Dir}(\vec{\alpha}+\vec{n})
+$$
 
 #### Notation and Assumption
 
-*  A *Vocabulary* indexed by $\{1,2,...,V\}$
-*  A *word* is the basic unit of discrete data and is represented by a V-vector s.t. $$w^v = 1 \text{ and } w^u = 0 \text{ for } u \neq v$$
-*  For example $$w_i = (0,0,1,0,0...,0)$$ If the ith *word*  matches the 3rd word in vocabulary
-*  A *document* is a sequence of N words denoted by ${\bf w} = (w_1,w_2,...,w_N)$
-*  A *corpus* is a collection of M documents denoted by ${\bf D} = \{ {\bf w_1},{\bf w_2},...,{\bf w_M} \}$
-*  There are k topics in total.
-*  **Bag-of-words** Assumption \(Exchangeable\)
+* Vocabulary size: $V$.
+* Number of topics: $K$.
+* A document is a sequence of words $\mathbf{w}_d=(w_{d1},\ldots,w_{dN_d})$.
+* A corpus contains $M$ documents.
+* Bag-of-words assumption: word order is ignored within each document.
 
 ### Where is the "Latent" in LDA?
-figure missing
 
-*  $$w \mid \beta, z \sim \text{Multinomial} $$
-$$z \mid \theta \sim \text{Multinomial}(\theta)$$
-$$\theta \sim \text{Dirichlet}(\alpha)$$
-*  So $\alpha$ and $\beta$ are the Hyperparameters in this model. \#\(k + kV\)
+The latent variables are topic assignments $z_{dn}$ and document-level topic proportions $\theta_d$.
 
-*  $$\beta = \{\beta_{ij}\}_{k \times V}$$
-*  where $${\beta_{ij}} = p(w^{j} = 1 \mid z^i = 1)$$
+Generative process for LDA:
+
+* For each topic $k$, draw topic-word distribution
+$$
+\beta_k \sim \text{Dirichlet}(\eta)
+$$
+* For each document $d$, draw topic mixture
+$$
+	heta_d \sim \text{Dirichlet}(\alpha)
+$$
+* For each word position $n$ in document $d$:
+$$
+z_{dn} \mid \theta_d \sim \text{Categorical}(\theta_d)
+$$
+$$
+w_{dn} \mid z_{dn},\beta \sim \text{Categorical}(\beta_{z_{dn}})
+$$
+
+So “latent” refers to unobserved topic structure $(\theta,z)$ behind observed words $w$.
 
 
-### Posteriorl Inference
+### Posterior Inference
 
 #### Intractable Posterior
 
-*  We want to find the posterior distribution of $\theta$ and $z$
-$$p(\theta,{\bf z} \mid {\bf w}, \alpha, \beta) = \frac{p(\theta,{\bf z},{\bf w}\mid \alpha \beta)}{p({\bf w} \mid \alpha, \beta)}$$
-*  However, the posterior distribution is intractable. (Denominator Part)
-*  How to get the posterior?
+* Goal:
+$$
+p(\theta,\mathbf{z} \mid \mathbf{w},\alpha,\beta)
+= \frac{p(\theta,\mathbf{z},\mathbf{w}\mid\alpha,\beta)}{p(\mathbf{w}\mid\alpha,\beta)}
+$$
+* The denominator requires summing/integrating over many latent configurations, so exact inference is generally intractable.
+
+Common approximation methods:
+
+* Variational inference: optimize a tractable lower bound (ELBO).
+* Collapsed Gibbs sampling: sample topic assignments with some variables integrated out.
+* Online/stochastic variational methods: scale LDA to large corpora.
+
+In practice, both variational and Gibbs methods can recover coherent topic structures when hyperparameters are reasonably chosen.
+
+## Summary
+
+* Hierarchical Bayesian models let us model uncertainty at multiple levels.
+* In the rat example, hierarchical priors enable partial pooling across groups.
+* LDA is a hierarchical model where latent topic variables explain observed text.
+* The main computational challenge is posterior inference, typically handled by approximation.
 
 
 ## Reference
 
-- D. Blei, A. Ng, and M. Jordan. (2003) Latent Dirichlet Allocation, Journal of Machine Learning Research 3:993-1022.
-- K. Nigam, A.McCallum, S. Thrun, and T. Mitchell (2000) Text classification from labeled and unlabeled documents using EM.,Machine Learning 39(2/3):103-134
-- A. Gelman, J.B. Carlin, H.S. Stern, D.B. Dunson, A. Vehtari, and D.B. Rubin (2013),Bayesian Data Analysis,CRC Press 39(2/3):101-103
+- D. Blei, A. Ng, and M. Jordan. (2003). Latent Dirichlet Allocation. Journal of Machine Learning Research, 3, 993-1022.
+- K. Nigam, A. McCallum, S. Thrun, and T. Mitchell. (2000). Text classification from labeled and unlabeled documents using EM. Machine Learning, 39(2/3), 103-134.
+- A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin. (2013). Bayesian Data Analysis (3rd ed.). CRC Press.
