@@ -13,6 +13,6 @@ MBTI at home: I am ISFP, and Nikki is ISTP.
 ### Education
 
 <ul class="skill-list">
-	<li>Ph.D. in Statistics, <a href="http://stat.psu.edu">Pennsylvania State University, University Park</a></li>
-	<li>Bachelor of Science, School of Statistics, <a href="http://stat.ruc.edu.cn">Renmin University of China</a></li>
+	<li>Ph.D. in Statistics, Pennsylvania State University, University Park</li>
+	<li>Bachelor of Science in Statistics, Renmin University of China</li>
 </ul>

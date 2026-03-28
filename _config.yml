@@ -52,6 +52,13 @@ authors:
     bio: Ride with Uncertainties.
     external-image: false
     picture: assets/images/profile.jpg
+    website: https://yingtostats.github.io/about/
+  WenboGuo:
+    name: Wenbo Guo
+    bio: Researcher in ML and LLMs.
+    external-image: true
+    picture: https://henrygwb.github.io/Wenbo_files/WENBO.JPG
+    website: https://henrygwb.github.io
     # twitter: your_twitter
 # do you want a larger site? change the option below
 # options: [normal, large] | default: normal
@@ -91,7 +98,7 @@ sass:
     sass_dir: _sass
     style: :compressed
 
-gems:
+plugins:
   - jemoji
   - jekyll-mentions
   - jekyll-seo-tag
