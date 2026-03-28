@@ -42,6 +42,35 @@
         min-width: 114%
         margin: 2rem 0 2rem -7%
 
+details
+    border-left: 3px solid #c9b39a
+    padding: 0.4em 0 0.4em 1em
+    margin: 1.2em 0
+
+    summary
+        cursor: pointer
+        user-select: none
+        list-style: none
+        display: flex
+        align-items: center
+        gap: 0.5em
+
+        &::-webkit-details-marker
+            display: none
+
+        &::before
+            content: "▶"
+            font-size: 0.7em
+            color: #c9b39a
+            transition: transform 0.2s ease
+            display: inline-block
+
+    &[open] > summary::before
+        transform: rotate(90deg)
+
+    &[open] > summary
+        margin-bottom: 0.6em
+
 .breaker
     height: 1px
     margin: 6rem auto
