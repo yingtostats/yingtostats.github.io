@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Linear Regression Review: Geometry, Inference, and Selection"
-date:   2016-12-29 21:00:00
+date:   2025-07-03 21:00:00
 tag:
 - Statistics
 - Regression
@@ -820,9 +820,9 @@ $$
 <p>where:</p>
 
 <ul>
-<li><span>$U \in \mathbb{R}^{n \times p}$</span> has <strong>orthonormal columns</strong>: <span>$U^T U = I_p$</span>, meaning each column <span>$u_k$</span> is a unit vector and distinct columns are perpendicular (<span>$u_j^T u_k = 0$</span> for <span>$j \ne k$</span>). These are the left singular vectors — one for each observation direction in the rotated space.</li>
+<li><span>$U \in \mathbb{R}^{n \times p}$</span> has <strong>orthonormal columns</strong>: <span>$U^T U = I_p$</span>, meaning each column <span>$u_k$</span> is a unit vector and distinct columns are perpendicular (<span>$u_j^T u_k = 0$</span> for <span>$j \ne k$</span>). These are the left singular vectors, one for each observation direction in the rotated space.</li>
 <li><span>$D = \mathrm{diag}(d_1, \ldots, d_p)$</span> with <span>$d_1 \ge d_2 \ge \cdots \ge d_p \ge 0$</span> the singular values, measuring how much variance each direction captures.</li>
-<li><span>$V \in \mathbb{R}^{p \times p}$</span> is orthogonal (<span>$V^T V = V V^T = I_p$</span>): its columns <span>$v_1, \ldots, v_p$</span> are the <strong>principal component directions</strong> in predictor space — unit vectors pointing along the axes of maximum variance. They are exactly the eigenvectors of <span>$X^TX$</span>, since <span>$X^TX = VD^2V^T$</span>.</li>
+<li><span>$V \in \mathbb{R}^{p \times p}$</span> is orthogonal (<span>$V^T V = V V^T = I_p$</span>): its columns <span>$v_1, \ldots, v_p$</span> are the <strong>principal component directions</strong> in predictor space: unit vectors pointing along the axes of maximum variance. They are exactly the eigenvectors of <span>$X^TX$</span>, since <span>$X^TX = VD^2V^T$</span>.</li>
 </ul>
 
 <hr>
@@ -835,7 +835,7 @@ $$
 Z = XV = UD.
 $$
 
-<p>The <span>$k$</span>-th column <span>$z_k = Xv_k = d_k u_k$</span> is the score of each observation along the <span>$k$</span>-th PC direction. Since <span>$U$</span> has orthonormal columns, <span>$Z^TZ = D^TU^TUD = D^2$</span>, so the columns of <span>$Z$</span> are orthogonal with variance <span>$d_k^2/(n-1)$</span>. Directions with small <span>$d_k$</span> are nearly constant across observations — exactly the near-collinear combinations in <span>$X$</span>.</p>
+<p>The <span>$k$</span>-th column <span>$z_k = Xv_k = d_k u_k$</span> is the score of each observation along the <span>$k$</span>-th PC direction. Since <span>$U$</span> has orthonormal columns, <span>$Z^TZ = D^TU^TUD = D^2$</span>, so the columns of <span>$Z$</span> are orthogonal with variance <span>$d_k^2/(n-1)$</span>. Directions with small <span>$d_k$</span> are nearly constant across observations, which is exactly what near-collinear combinations in <span>$X$</span> look like.</p>
 
 <hr>
 
@@ -914,7 +914,7 @@ $$
 \text{PCR: } s_k = \mathbf{1}[k \le K], \qquad \text{Ridge: } s_k = \frac{d_k^2}{d_k^2 + \lambda}.
 $$
 
-<p>Both suppress the small-<span>$d_k$</span> directions that cause instability under collinearity. The difference is that ridge never fully zeros a direction — it is a continuous relaxation of PCR's hard truncation. As <span>$\lambda \to \infty$</span>, all <span>$s_k \to 0$</span>; as <span>$\lambda \to 0$</span>, all <span>$s_k \to 1$</span> and ridge recovers OLS.</p>
+<p>Both suppress the small-<span>$d_k$</span> directions that cause instability under collinearity. The difference is that ridge never fully zeros a direction; it is a continuous relaxation of PCR's hard truncation. As <span>$\lambda \to \infty$</span>, all <span>$s_k \to 0$</span>; as <span>$\lambda \to 0$</span>, all <span>$s_k \to 1$</span> and ridge recovers OLS.</p>
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
 
@@ -1091,17 +1091,149 @@ A single linear restriction on $\beta$, such as $H_0: \beta_{j} = 0$ or $H_0: \b
 
 ### Multiple Hypotheses
 
-When testing several restrictions simultaneously, such as $H_0: \beta_{2} = \beta_{3} = 0$ or $H_0: R\beta = r$ with $q > 1$, use the joint $F$ test. Running $q$ separate $t$ tests and declaring significance if any single test passes inflates the type I error rate above the nominal level.
+When testing several restrictions simultaneously (such as the joint null that a set of coefficients are all zero), use the joint $F$ test rather than running separate $t$ tests. If $q$ separate $t$ tests are run and significance is declared whenever any one passes, the probability of at least one false positive exceeds the nominal level $\alpha$.
 
 ### Multiple Testing Adjustment
 
-When testing many features one by one (for example, screening $p$ candidate predictors), the probability of at least one false positive under the null grows with the number of tests. Common corrections include:
+When testing $m$ hypotheses one by one, two error rates are relevant. The **family-wise error rate (FWER)** is the probability of at least one false rejection: $\mathrm{FWER} = P(\text{any false rejection})$. The **false discovery rate (FDR)** is the expected proportion of rejections that are false: $\mathrm{FDR} = E[V/R]$, where $V$ is the number of false rejections and $R$ is the total number of rejections ($R > 0$). FDR $\le$ FWER, so FDR control is less stringent but more powerful.
 
-* **Bonferroni.** Reject $H_{0,k}$ when $p_{k} < \alpha/m$ where $m$ is the number of tests. Controls the family-wise error rate (FWER) but is conservative.
-* **Holm.** Sort $p$-values and apply a step-down threshold. Less conservative than Bonferroni while still controlling FWER.
-* **Benjamini-Hochberg.** Controls the false discovery rate (FDR), the expected proportion of false positives among all rejections. Substantially more powerful than FWER procedures in high-dimensional settings.
+* **Bonferroni.** Reject hypothesis $k$ when its $p$-value satisfies $p_k < \alpha/m$. Controls FWER at level $\alpha$ exactly, but is conservative when tests are positively correlated.
+* **Holm.** A step-down procedure that uniformly improves on Bonferroni while still controlling FWER.
+* **Benjamini-Hochberg (BH).** Controls FDR at level $\alpha$ under independence (and positive dependence). Substantially more powerful than FWER procedures in high-dimensional settings.
 
-The key principle: the more hypotheses you test, the more careful you must be before claiming significance.
+<br>
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">Holm and Benjamini-Hochberg procedures</span></summary>
+
+<p><strong>Holm (step-down).</strong></p>
+
+<ol>
+<li>Sort the <span>$m$</span> p-values in ascending order: <span>$p_{(1)} \le p_{(2)} \le \cdots \le p_{(m)}$</span>, with corresponding hypotheses <span>$H_{(1)}, \ldots, H_{(m)}$</span>.</li>
+<li>Find the smallest index <span>$k$</span> such that <span>$p_{(k)} > \alpha/(m - k + 1)$</span>.</li>
+<li>Reject <span>$H_{(1)}, \ldots, H_{(k-1)}$</span>; retain <span>$H_{(k)}, \ldots, H_{(m)}$</span>.</li>
+</ol>
+
+<p>Holm always rejects at least as many hypotheses as Bonferroni, since the threshold <span>$\alpha/(m-k+1)$</span> is at least <span>$\alpha/m$</span>.</p>
+
+<hr>
+
+<p><strong>Benjamini-Hochberg (step-up).</strong></p>
+
+<ol>
+<li>Sort p-values: <span>$p_{(1)} \le \cdots \le p_{(m)}$</span>.</li>
+<li>Find the largest index <span>$k$</span> such that <span>$p_{(k)} \le k\alpha/m$</span>.</li>
+<li>Reject <span>$H_{(1)}, \ldots, H_{(k)}$</span>.</li>
+</ol>
+
+<p>The threshold <span>$k\alpha/m$</span> is a line through the origin in the p-value rank plot. BH rejects all hypotheses whose sorted p-value falls below this line up to the last crossing. Under independence, <span>$\mathrm{FDR} \le \alpha$</span>. Under arbitrary positive dependence (PRDS condition), the same bound holds.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+
+</details>
+
+## FDR Control
+
+### Why FDR
+
+In high-dimensional settings (genomics, neuroimaging, large-scale feature selection), the number of hypotheses $m$ can be in the thousands or millions. FWER control at level $\alpha$ requires each individual test to pass a threshold of order $\alpha/m$, which becomes so stringent that almost nothing is discovered. FDR control accepts that some false discoveries will occur, but keeps their expected proportion bounded.
+
+Formally, let $V$ be the number of false rejections and $R$ the total number of rejections. The FDR is
+
+$$
+\mathrm{FDR} = E\!\left[\frac{V}{R}\,\mathbf{1}(R > 0)\right].
+$$
+
+When all null hypotheses are true, FDR $=$ FWER. Otherwise FDR $\le$ FWER, so FDR control is strictly less conservative. The BH procedure controls FDR at level $\alpha$ and is the standard baseline.
+
+### Knockoffs
+
+The **knockoff filter** (Barber and Candès, 2015; model-X extension by Candès et al., 2018) provides exact finite-sample FDR control for variable selection without relying on asymptotic approximations or $p$-values.
+
+**Idea.** Construct for each feature $x_j$ a synthetic "knockoff" copy $\tilde x_j$ that mimics the correlation structure of $x_j$ with all other features, but is conditionally independent of the response $y$ given the real features. Any feature that appears important relative to its own knockoff is a genuine signal; features that are interchangeable with their knockoffs are noise.
+
+**Knockoff construction.** For the fixed-X setting with design matrix $X$, knockoffs $\tilde X$ satisfy
+
+$$
+\tilde X^T \tilde X = X^T X,
+\qquad
+\tilde X^T X = X^T X - \mathrm{diag}(s),
+$$
+
+for some $s \ge 0$ chosen to make $\tilde x_j$ as different from $x_j$ as possible while respecting the correlation constraint. The augmented matrix $[X\;\tilde X]$ is constructed explicitly via QR or SDP.
+
+**Feature statistics.** Fit a model (e.g., lasso) on the augmented design $[X\;\tilde X]$ to obtain importance scores $Z_j$ for each original feature and $\tilde Z_j$ for each knockoff. Define the antisymmetric statistic
+
+$$
+W_j = f(Z_j, \tilde Z_j),
+$$
+
+where $f$ is any function satisfying $f(z, \tilde z) = -f(\tilde z, z)$, for example $W_j = Z_j - \tilde Z_j$ or $W_j = \max(Z_j, \tilde Z_j)\cdot \mathrm{sign}(Z_j - \tilde Z_j)$.
+
+**Knockoff filter.** For a target FDR level $q$, choose the threshold
+
+$$
+T = \min\left\{t > 0 : \frac{1 + |\{j : W_j \le -t\}|}{|\{j : W_j \ge t\}|} \le q\right\},
+$$
+
+and reject $\{j : W_j \ge T\}$. The numerator $1 + |\{j: W_j \le -t\}|$ estimates the number of false discoveries (using knockoffs as nulls); the denominator counts total rejections.
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">Why the knockoff filter controls FDR</span></summary>
+
+<p><strong>Symmetry argument.</strong></p>
+
+<p>For a null feature <span>$j$</span> (one where <span>$x_j \perp y \mid X_{-j}$</span>), the knockoff construction guarantees that <span>$x_j$</span> and <span>$\tilde x_j$</span> are exchangeable in the joint distribution with <span>$y$</span>. Therefore <span>$W_j$</span> is symmetric around zero: <span>$P(W_j \ge t) = P(W_j \le -t)$</span> for any <span>$t$</span>.</p>
+
+<p><strong>FDP estimate.</strong></p>
+
+<p>At threshold <span>$t$</span>, the number of false discoveries is <span>$V(t) = |\{\text{null } j : W_j \ge t\}|$</span>. By the symmetry of null <span>$W_j$</span>, the count of null features with <span>$W_j \le -t$</span> has the same distribution as <span>$V(t)$</span>. The total count <span>$|\{j : W_j \le -t\}|$</span> (including non-nulls, which are rare on the negative side) overestimates <span>$V(t)$</span>, so</p>
+
+$$
+\widehat{\mathrm{FDP}}(t) = \frac{1 + |\{j : W_j \le -t\}|}{|\{j : W_j \ge t\}|}
+$$
+
+<p>is a conservative estimate of the true false discovery proportion. Choosing the smallest <span>$t$</span> where this ratio is at most <span>$q$</span> controls FDR at level <span>$q$</span>.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+
+</details>
+
+### Data Splitting and Multiple Splitting
+
+**Data splitting** separates selection from inference by using independent data for each step, avoiding the post-selection inference problem where standard $p$-values are invalid after a data-driven model selection.
+
+**Single split.** Randomly partition the $n$ observations into two halves $\mathcal{D}_1$ and $\mathcal{D}_2$.
+
+1. On $\mathcal{D}_1$: run lasso (or any selector) to obtain a selected set $\hat S$.
+2. On $\mathcal{D}_2$: fit OLS restricted to $\hat S$ and compute standard $p$-values for each selected coefficient.
+
+Because $\mathcal{D}_2$ was not used for selection, the $p$-values from step 2 are valid conditionally on $\hat S$. Apply BH to those $p$-values to control FDR over the selected set.
+
+**Limitation.** A single split is unstable: different splits yield different selected sets and different $p$-values.
+
+**Multiple splitting** (Meinshausen, Meier, and Bühlmann, 2009) repeats the procedure $B$ times with independent random splits, producing $B$ sets of $p$-values $\{p_j^{(b)}\}$.
+
+For each feature $j$, aggregate across splits:
+
+$$
+p_j^{\mathrm{agg}} = \min\!\left(1,\; q_\gamma\!\left\{\frac{p_j^{(b)}}{\gamma} : b = 1, \ldots, B\right\}\right),
+$$
+
+where $q_\gamma$ is the $\gamma$-quantile across splits (typically $\gamma = 0.05$). The division by $\gamma$ corrects for the quantile selection. Applying BH to $\{p_j^{\mathrm{agg}}\}$ controls FDR while averaging out the instability of any single split.
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">Why multiple splitting controls FDR</span></summary>
+
+<p><strong>Single split validity.</strong> On a single split, the second-half <span>$p$</span>-values are independent of the selection step, so under the null <span>$H_{0,j}$</span>, <span>$p_j^{(b)} \sim \mathrm{Uniform}(0,1)$</span> conditional on <span>$j \in \hat S^{(b)}$</span>. This makes BH valid on each individual split.</p>
+
+<p><strong>Aggregation.</strong> Taking the <span>$\gamma$</span>-quantile across splits concentrates on the splits where feature <span>$j$</span> is most significant. The correction factor <span>$1/\gamma$</span> compensates for this selection across splits: by a standard quantile inequality, <span>$P(q_\gamma\{p_j^{(b)}/\gamma\} \le \alpha) \le \alpha$</span> under the null, so the aggregated values are still valid <span>$p$</span>-values. Applying BH to the aggregated values therefore controls FDR.</p>
+
+<p><strong>Why it outperforms a single split.</strong> Averaging over many splits stabilizes the selected set and the <span>$p$</span>-values: features that appear important in most splits get low aggregated <span>$p$</span>-values, while features selected only in rare splits do not. This reduces variance without inflating the false discovery rate.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+
+</details>
 
 ## Feature Screening and Selection
 
@@ -1122,12 +1254,22 @@ In high dimensions (many more predictors than observations), sure independence s
 
 Selection methods aim to build the final predictor set:
 
-* Forward selection: start from the intercept-only model, add the most significant feature at each step.
-* Backward elimination: start from the full model, remove the least significant feature at each step.
-* Stepwise regression: combine forward and backward moves.
-* Best subset selection: exhaustive search over all $2^p$ subsets, feasible only for small $p$.
-* Lasso and elastic net: shrinkage-based selection embedded in the objective.
-* Stability selection: run lasso on bootstrap subsamples, keep features selected in most replicates.
+* **Forward selection.** Start from the intercept-only model, add the most significant feature at each step.
+* **Backward elimination.** Start from the full model, remove the least significant feature at each step.
+* **Stepwise regression.** Combine forward and backward moves.
+* **Best subset selection.** Exhaustive search over all $2^p$ subsets; feasible only for small $p$.
+* **Lasso and elastic net.** Shrinkage-based selection embedded in the objective; the solution path traces selected features as $\lambda$ varies.
+* **Stability selection.** Run lasso on bootstrap subsamples, keep features selected in most replicates.
+
+**Information criteria.** Rather than testing, model complexity can be penalized directly via:
+
+$$
+\mathrm{AIC} = -2\ell(\hat\theta) + 2p,
+\qquad
+\mathrm{BIC} = -2\ell(\hat\theta) + p\log n,
+$$
+
+where $\ell(\hat\theta)$ is the maximized log-likelihood and $p$ is the number of parameters. BIC penalizes complexity more heavily and is consistent (selects the true model as $n \to \infty$ if it is in the candidate set); AIC targets predictive accuracy and tends to select slightly larger models. For the Gaussian linear model, AIC and BIC reduce to penalized versions of RSS.
 
 ### Practical Warnings
 
@@ -1143,6 +1285,70 @@ Selection methods aim to build the final predictor set:
 3. Apply cross-validated lasso or elastic net for simultaneous selection and shrinkage.
 4. Refit the selected model by OLS on the training fold (or full data), then examine residuals and VIFs.
 5. Separate the prediction goal from the interpretation goal: a good predictive model need not have interpretable individual coefficients.
+
+## Stability
+
+A model is **stable** if small perturbations of the data (resampling observations, adding noise, or slightly changing the predictor set) yield similar outputs: similar selected features, similar coefficient estimates, similar predictions. Stability is a prerequisite for reliable inference and generalization. An unstable model may fit the training data well while producing wildly different answers on nearby datasets.
+
+### Sources of Instability
+
+* **Multicollinearity.** When two predictors are highly correlated, their OLS coefficients have large variance and opposite signs can appear depending on the sample. The selected set under lasso can swap between the two across resamples.
+* **Near-singularity.** Small eigenvalues of $X^TX$ amplify noise into large coefficient variance, as shown in the ridge/PCR connection.
+* **High dimension relative to $n$.** When $p$ is close to $n$, OLS overfits and small perturbations change fitted values substantially.
+* **Stepwise and greedy procedures.** Sequential selection methods can take very different paths on slightly different datasets, especially when multiple predictors are competitive.
+
+### Bootstrap Stability Diagnostics
+
+Run the selection procedure on $B$ bootstrap resamples of the data. For each feature $j$, compute the **selection frequency**
+
+$$
+\hat\pi_j = \frac{1}{B}\sum_{b=1}^{B} \mathbf{1}[j \in \hat S^{(b)}].
+$$
+
+Features with $\hat\pi_j$ close to 1 are stably selected; features with $\hat\pi_j$ near 0.5 are on the selection boundary and should not be trusted individually. Similarly, track the bootstrap distribution of $\hat\beta_j^{(b)}$ to assess coefficient stability: wide bootstrap intervals under collinearity confirm that the point estimate is unreliable even when it appears significant.
+
+### Stability Selection
+
+Stability selection (Meinshausen and Bühlmann, 2010) formalizes bootstrap stability into a procedure with error control. Run lasso on $B$ subsamples of size $n/2$ (without replacement) across a grid of $\lambda$ values. The stable selected set is
+
+$$
+\hat S^{\mathrm{stable}} = \left\{j : \sup_\lambda \hat\pi_j(\lambda) \ge \pi_{\mathrm{thr}}\right\},
+$$
+
+where $\hat\pi_j(\lambda)$ is the selection frequency at regularization level $\lambda$ and $\pi_{\mathrm{thr}} \in (0.5, 1)$ is a threshold (typically 0.6–0.9). The expected number of falsely selected variables satisfies
+
+$$
+E[|\hat S^{\mathrm{stable}} \cap H_0|] \le \frac{q^2}{(2\pi_{\mathrm{thr}} - 1)\,|\hat S(\lambda)_{\max}|},
+$$
+
+where $q$ is the average model size and $H_0$ is the set of null features. This bound holds without assumptions on the design matrix or the noise distribution.
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">Why subsampling of size $n/2$ and why the error bound holds</span></summary>
+
+<p><strong>Why $n/2$.</strong> Using half-samples ensures two things: (1) each subsample is large enough to run lasso reliably, and (2) the selection events on two independent half-samples from the same draw are approximately independent. This independence is the key structural assumption in the error bound derivation.</p>
+
+<hr>
+
+<p><strong>Error bound sketch.</strong> Let <span>$\hat\pi_j$</span> be the selection frequency for a null feature <span>$j$</span>. On any single subsample, <span>$P(j \in \hat S) \le q / p$</span> (a feature enters roughly in proportion to its share of the average model size). Since subsamples are approximately independent, <span>$\hat\pi_j \approx \mathrm{Binomial}(B, q/p) / B$</span>. For <span>$\hat\pi_j \ge \pi_{\mathrm{thr}}$</span> with <span>$\pi_{\mathrm{thr}} > 1/2$</span>, the probability decays geometrically in <span>$\pi_{\mathrm{thr}}$</span>, and summing over null features gives the stated bound on expected false selections.</p>
+
+<hr>
+
+<p><strong>Comparison to data splitting.</strong> Data splitting uses one held-out half for inference after selection on the other half. Stability selection uses many subsamples and summarizes by selection frequency, never requiring a held-out set for inference. Both exploit the independence between the two halves; stability selection averages out the variance of a single split at the cost of not producing individual p-values.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+
+</details>
+
+### Prediction Stability
+
+Stability of the selected set does not guarantee stability of predictions. For a new point $x_*$, the bootstrap variance of the predicted value
+
+$$
+\mathrm{Var}_{\mathrm{boot}}(\hat y_*) = \frac{1}{B}\sum_{b=1}^B \left(\hat y_*^{(b)} - \bar{\hat y}_*\right)^2
+$$
+
+measures how much the fitted model varies across resamples at $x_*$. High prediction variance at a test point signals that the model is extrapolating into a region where the data provide little constraint, independent of whether the selected features are stable.
 
 ## Practical Checklist
 
