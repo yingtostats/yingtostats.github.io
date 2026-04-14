@@ -24,9 +24,13 @@ Here $\ell(\theta; x_i, y_i)$ is the **per-sample loss** (e.g., cross-entropy $-
 
 Two classification systems are commonly used and should not be confused.
 
-**R-rate (global rate)** asks: after $k$ steps total, how small is the error? It describes the overall trajectory of $\|\theta_k - \theta^*\|$ as a function of $k$, giving a global envelope like $O(1/k)$ or $O(a^k)$. Named "R" for *root* because it is formally defined via $\limsup_{k\to\infty} \|\theta_k - \theta^*\|^{1/k}$.
+**R-rate (global rate)** asks: after $k$ steps total, how small is the error? It describes the overall trajectory of $$\|\theta_k - \theta^*\|$$ as a function of $k$, giving a global envelope like $O(1/k)$ or $O(a^k)$. Named "R" for *root* because it is formally defined via $\limsup_{k\to\infty} \|\theta_k - \theta^*\|^{1/k}$.
 
-**Q-rate (local ratio)** asks: how much does step $k+1$ improve over step $k$? It looks only at consecutive pairs, $\|\theta_{k+1} - \theta^*\| / \|\theta_k - \theta^*\|^q$, and classifies convergence by the order $q$. Named "Q" for *quotient*.
+**Q-rate (local ratio)** asks: how much does step $k+1$ improve over step $k$? It looks only at consecutive pairs: 
+
+$$\frac{\|\theta_{k+1} - \theta^*\|} {\|\theta_k - \theta^*\|^q},$$
+
+ and classifies convergence by the order $q$. Named "Q" for *quotient*.
 
 The two are related but distinct. Q-linear (constant ratio $< 1$ at every step) implies R-linear (geometric global decay). But R-linear does not imply Q-linear: the step-by-step ratio could spike occasionally yet still yield geometric decay on average. Q-rate is more informative near a solution; R-rate is the right tool for comparing algorithms globally.
 
@@ -130,6 +134,10 @@ This is $O(1/k)$. For $\mu$-strongly convex $L$, the rate improves to linear:
 
 $$\|\theta_k - \theta^*\|^2 \le (1 - \eta\mu)^k \|\theta_0 - \theta^*\|^2.$$
 
+**Pros.** Simple to implement; clean convergence theory; exact gradient means fixed learning rate suffices; linear convergence for strongly convex problems.
+
+**Cons.** Requires one full pass over all $n$ data points per step; impractical for large datasets; single global learning rate for all parameters; sensitive to $L$-smoothness constant for step size tuning.
+
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">Derivation of the O(1/k) bound</span></summary>
 
@@ -160,7 +168,7 @@ The gradient estimate is unbiased: $E[\nabla \ell(\theta_k; x_{i_k})] = \nabla L
 
 **Convergence with decaying learning rate.** Under convexity and $\eta_k = c/\sqrt{k}$:
 
-$$E[L(\theta_k)] - L(\theta^*) = O(1/\sqrt{k}).$$
+$$E[L(\theta_k)] - L(\theta^*) = \tilde{O}(1/\sqrt{k}).$$
 
 This is slower than full-batch $O(1/k)$, but each iteration costs $O(1)$ vs $O(n)$, so SGD reaches a given accuracy in far fewer data touches when $n$ is large.
 
@@ -181,6 +189,10 @@ so the iterates settle into a neighborhood of the optimum rather than converging
 In LLM training, a warmup + cosine decay schedule is used for this reason: the large early $\eta$ makes fast initial progress, and the small late $\eta$ shrinks the noise floor so the optimizer settles into a flat minimum rather than bouncing around it.
 
 **Mini-batch SGD.** Using a batch of size $B$ reduces the gradient variance by $1/B$ (if samples are independent), improving the constant in the bound but not the $O(1/\sqrt{k})$ rate. In practice $B \in [32, 4096]$ balances variance reduction against hardware parallelism.
+
+**Pros.** $O(1)$ cost per step; scales to arbitrarily large datasets; gradient noise helps escape saddle points and sharp minima; foundation of all modern deep learning optimization.
+
+**Cons.** Slower $O(1/\sqrt{k})$ rate vs $O(1/k)$ for full-batch GD; requires decaying learning rate to converge; high variance with small batches; no per-parameter adaptivity (same $\eta$ for all weights).
 
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">One-step recursion: the three-term structure</span></summary>
@@ -248,7 +260,9 @@ $$\sum_{k=1}^K \eta_k = c\sum_{k=1}^K \frac{1}{\sqrt{k}} \approx 2c\sqrt{K}, \qq
 
 <p>Substituting:</p>
 
-$$E[L(\bar\theta_K)] - L(\theta^*) \le \frac{\|\theta_0-\theta^*\|^2 + G^2 c^2\log K}{4c\sqrt{K}} = O\!\left(\frac{1}{\sqrt{K}}\right).$$
+$$E[L(\bar\theta_K)] - L(\theta^*) \le \frac{\|\theta_0-\theta^*\|^2 + G^2 c^2\log K}{4c\sqrt{K}} = O\!\left(\frac{\log K}{\sqrt{K}}\right).$$
+
+<p>This is sometimes written loosely as $O(1/\sqrt{K})$, which is an abuse of notation: $\log K / \sqrt{K}$ is not strictly $O(1/\sqrt{K})$ because $\log K \to \infty$. The formal notation is $\tilde{O}(1/\sqrt{K})$, meaning $O(1/\sqrt{K})$ up to logarithmic factors. Since $\log K$ grows far slower than any positive power of $K$, the $\log K$ factor is negligible in practice and the rate is effectively $1/\sqrt{K}$.</p>
 
 <p>The key insight: $\eta_k \to 0$ kills the noise floor ($\sum \eta_k^2$ grows only as $\log K$), while $\sum \eta_k \sim \sqrt{K}$ grows fast enough that averaging still makes progress. Any faster decay (e.g., $\eta_k = c/k$) would make $\sum \eta_k$ grow too slowly, losing progress. Any slower decay (fixed $\eta$) leaves the noise floor nonzero.</p>
 
@@ -275,15 +289,21 @@ $$E[L(\bar\theta_K)] - L(\theta^*) \le \frac{\|\theta_0-\theta^*\|^2 + (G^2/B)\s
 
 ## Momentum
 
-Gradient descent uses only the current gradient. Momentum methods accumulate a velocity vector to accelerate along persistent directions and dampen oscillations.
+Gradient descent uses only the current gradient and has no memory of past steps. This causes two problems: slow progress along shallow directions, and oscillation across steep directions. Momentum methods accumulate a velocity vector that builds up speed in consistent directions and dampens oscillation in alternating directions.
+
+**The ravine intuition.** Consider a loss surface shaped like an elongated valley: steep sides, gentle slope along the bottom. Plain GD follows the gradient at each step, oscillating left-right across the narrow steep dimension while making slow progress along the gentle bottom. Momentum helps because the left-right gradient components alternate in sign and cancel in the velocity $v_k$, while the consistent downhill components accumulate. The result is faster progress along the bottom and damped oscillations across it.
 
 ### Heavy Ball (Classical Momentum)
 
 $$v_{k+1} = \beta v_k - \eta \nabla L(\theta_k), \qquad \theta_{k+1} = \theta_k + v_{k+1}.$$
 
-The velocity $v_k$ is an exponential moving average of past gradients with decay $\beta \in [0,1)$. In regions where gradients consistently point the same direction, $v_k$ grows, giving faster progress. Across a narrow valley, oscillating gradients cancel in $v_k$, reducing transverse steps.
+The velocity $v_k$ is a weighted sum of all past gradients with exponentially decaying weights $\beta^j$ for gradient $j$ steps ago. In a direction where gradients consistently point the same way, $v_k$ grows proportionally to $1/(1-\beta)$ times the gradient magnitude. In a direction where gradients oscillate (as in the ravine sides), the positive and negative contributions cancel and $v_k$ stays small.
 
 **Convergence.** For strongly convex quadratics, heavy ball with optimal $\beta = \left(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\right)^2$ achieves linear convergence with condition number $\sqrt{\kappa}$ instead of $\kappa$, where $\kappa = L/\mu$.
+
+**Pros.** Reduces effective condition number from $\kappa$ to $\sqrt{\kappa}$; simple one-line addition to GD; intuitive physical analogy (ball rolling with momentum).
+
+**Cons.** Convergence guarantee only for strongly convex quadratics; can oscillate or diverge with poor $\beta$ choice; no theoretical guarantees for nonconvex objectives; superseded by Nesterov in theory.
 
 ### Nesterov Accelerated Gradient
 
@@ -296,6 +316,10 @@ $$\theta_{k+1} = y_k - \eta \nabla L(y_k), \qquad y_{k+1} = \theta_{k+1} + \frac
 $$L(\theta_k) - L(\theta^*) \le \frac{2\|\theta_0 - \theta^*\|^2}{\eta(k+1)^2} = O(1/k^2).$$
 
 This is optimal for first-order methods on smooth convex functions; no gradient-based algorithm can do better in the worst case.
+
+**Pros.** Optimal $O(1/k^2)$ rate for convex problems; widely used as the backbone of FISTA for composite objectives; momentum coefficient is theoretically derived, not a free hyperparameter.
+
+**Cons.** Full-batch required for theoretical guarantees; no convergence improvement over SGD in the stochastic setting; momentum coefficient needs adjustment for nonconvex problems.
 
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">Why lookahead gives O(1/k²): the estimate sequence argument</span></summary>
@@ -311,34 +335,60 @@ A single global learning rate is suboptimal when parameters have very different 
 
 ### AdaGrad
 
-$$G_{k} = G_{k-1} + \nabla L(\theta_k) \odot \nabla L(\theta_k), \qquad \theta_{k+1} = \theta_k - \frac{\eta}{\sqrt{G_k + \epsilon}} \odot \nabla L(\theta_k),$$
+$G_k \in \mathbb{R}^p$ accumulates the sum of squared gradients for each parameter separately, and each parameter is updated by dividing by its own $\sqrt{G_{k,j}}$:
 
-where division and square root are elementwise, $G_k \in \mathbb{R}^p$ accumulates squared gradients, and $\epsilon > 0$ prevents division by zero.
+$$G_{k,j} = G_{k-1,j} + (\nabla_j L(\theta_k))^2, \qquad \theta_{k+1,j} = \theta_{k,j} - \frac{\eta}{\sqrt{G_{k,j} + \epsilon}} \cdot \nabla_j L(\theta_k).$$
 
-Parameters that receive large or frequent gradients get a shrinking effective rate $\eta/\sqrt{G_k}$. This makes AdaGrad well-suited for sparse features (e.g., embeddings) where most parameters receive zero gradient most of the time.
+**Why dividing by $\sqrt{G_k}$ cancels out gradient magnitude.** The effective update for parameter $j$ is $\frac{\eta}{\sqrt{G_{k,j}}} \cdot \nabla_j L(\theta_k)$. Consider two cases:
 
-**Limitation.** $G_k$ is monotonically increasing, so the effective learning rate decays to zero and learning stops. This makes AdaGrad poorly suited for deep networks trained for many steps.
+- **Dense parameter** (gradient magnitude approximately $M > 0$ at every step): after $k$ steps, $G_{k,j} \approx kM^2$, so $\sqrt{G_{k,j}} \approx \sqrt{k}\,M$, and the effective update is $\frac{\eta}{\sqrt{k}\,M} \cdot M = \frac{\eta}{\sqrt{k}}$. The gradient magnitude $M$ cancels exactly, so large-gradient parameters are automatically given a smaller learning rate.
+- **Sparse parameter** (gradient magnitude $M > 0$ only $s \ll k$ times, zero otherwise): $G_{k,j} \approx sM^2$, so the effective update is $\frac{\eta}{\sqrt{s}\,M} \cdot M = \frac{\eta}{\sqrt{s}}$. Since $s \ll k$, this is much larger than for the dense parameter, so rare parameters keep a large effective learning rate.
+
+In both cases the gradient magnitude cancels out of the update. The current gradient only provides the **direction**; the **step size** is determined entirely by the history of past gradients accumulated in $G_{k,j}$. This is equivalent to normalizing each update by the root-mean-square (RMS) of past gradients: frequently updated parameters get shrinking steps, rarely updated parameters keep large steps.
+
+**Limitation.** $G_{k,j}$ only ever grows, so $\eta/\sqrt{G_{k,j}} \to 0$ for every parameter eventually, and learning stops. This makes AdaGrad poorly suited for deep networks trained for many steps.
+
+**Pros.** Automatic per-parameter learning rates; excellent for sparse gradients (e.g., word embeddings where most parameters receive zero gradient per step); no learning rate tuning needed for sparse problems.
+
+**Cons.** Effective learning rate decays to zero monotonically, so learning eventually stops; unsuitable for long training runs or dense gradient problems; superseded by RMSprop and Adam in practice.
 
 ### RMSprop
 
-Replace the cumulative sum with an exponential moving average:
+RMSprop fixes AdaGrad's vanishing learning rate by replacing the cumulative sum $G_k = \sum_{j=1}^k \nabla L(\theta_j)^2$ with an exponential moving average (EMA):
 
 $$v_k = \rho v_{k-1} + (1-\rho)\nabla L(\theta_k)^2, \qquad \theta_{k+1} = \theta_k - \frac{\eta}{\sqrt{v_k + \epsilon}} \odot \nabla L(\theta_k),$$
 
-with $\rho \in [0.9, 0.99]$ typically. This prevents the learning rate from decaying to zero: $v_k$ tracks recent gradient magnitude rather than the full history.
+with $\rho \in [0.9, 0.99]$ typically. In AdaGrad, $G_k$ grows without bound so $\eta/\sqrt{G_k} \to 0$. The EMA instead gives each squared gradient an exponentially decaying weight, so $v_k$ only remembers recent gradient magnitudes and stays bounded. The effective learning rate no longer decays to zero.
+
+**Pros.** Fixes AdaGrad's vanishing learning rate; simple and robust; good empirical performance on RNNs and recurrent architectures.
+
+**Cons.** No convergence theory for general nonconvex problems; no first moment (momentum), unlike Adam; sensitive to $\rho$ and $\epsilon$; largely replaced by Adam/AdamW in modern practice.
 
 ### Adam
 
-Adam (Adaptive Moment Estimation) combines RMSprop's second moment with a first moment estimate (momentum):
+Adam (Adaptive Moment Estimation) combines RMSprop's second moment with a first moment estimate (momentum). Defaults: $\beta_1 = 0.9$, $\beta_2 = 0.999$, $\epsilon = 10^{-8}$.
 
-$$m_k = \beta_1 m_{k-1} + (1-\beta_1)\nabla L(\theta_k)$$
-$$v_k = \beta_2 v_{k-1} + (1-\beta_2)\nabla L(\theta_k)^2$$
-$$\hat m_k = \frac{m_k}{1-\beta_1^k}, \qquad \hat v_k = \frac{v_k}{1-\beta_2^k}$$
+**Step 1: first moment (momentum)**
+
+$$m_k = \beta_1 m_{k-1} + (1-\beta_1)\nabla L(\theta_k).$$
+
+**Step 2: second moment (adaptive scaling)**
+
+$$v_k = \beta_2 v_{k-1} + (1-\beta_2)\nabla L(\theta_k)^2.$$
+
+**Step 3: bias correction**
+
+$$\hat m_k = \frac{m_k}{1-\beta_1^k}, \qquad \hat v_k = \frac{v_k}{1-\beta_2^k}.$$
+
+**Step 4: parameter update**
+
 $$\theta_{k+1} = \theta_k - \frac{\eta}{\sqrt{\hat v_k} + \epsilon}\hat m_k.$$
 
-Defaults: $\beta_1 = 0.9$, $\beta_2 = 0.999$, $\epsilon = 10^{-8}$.
+The bias corrections matter early in training. At step 1, $m_1 = (1-\beta_1)g_1$, which is much smaller than $g_1$. Dividing by $(1-\beta_1^k)$ rescales it back to the true gradient magnitude.
 
-The bias corrections $1/(1-\beta^k)$ matter early in training: at step 1, $m_1 = (1-\beta_1)g_1$, which is much smaller than $g_1$; dividing by $(1-\beta_1)$ rescales it back to the true gradient magnitude.
+**Pros.** Combines adaptive learning rates with momentum; fast convergence in practice; robust to learning rate choice; default optimizer for most deep learning.
+
+**Cons.** No convergence proof for general convex problems (counterexamples exist); $L_2$ regularization is broken when used with Adam (use AdamW instead); can generalize worse than SGD with momentum on some vision tasks due to sharp minima.
 
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">Why bias correction is needed</span></summary>
@@ -358,11 +408,13 @@ $$E[m_k] = g(1-\beta_1)\sum_{j=1}^k \beta_1^{k-j} = g(1-\beta_1^k).$$
 
 ### AdamW
 
-Standard $L_2$ regularization adds $\frac{\lambda}{2}\|\theta\|^2$ to the loss, so the gradient becomes $\nabla L(\theta) + \lambda\theta$. Inside Adam, this regularization term enters $m_k$ and $v_k$ and gets adaptively scaled. The effective weight decay applied to parameter $j$ at step $k$ is
+**Why weight decay is needed.** Without regularization, nothing prevents weights from growing arbitrarily large. Large weights make the model sensitive to small input changes, hurting generalization. $L_2$ regularization addresses this by adding a penalty $\frac{\lambda}{2}\|\theta\|^2$ to the loss, which pulls all weights toward zero. The intended effect is simple: at each step, shrink every weight uniformly by a small amount $\eta\lambda$, independently of the gradient. This is called **weight decay**.
+
+**The problem with Adam + $L_2$.** The standard way to add $L_2$ is to include it in the loss, making the gradient $\nabla L(\theta) + \lambda\theta$. But in Adam, every gradient term (including $\lambda\theta$) gets absorbed into the moment estimates $m_k$ and $v_k$ and then adaptively scaled by $1/\sqrt{\hat v_{k,j}}$. The effective weight decay actually applied to parameter $j$ is
 
 $$\text{effective decay}_j = \frac{\eta\lambda}{\sqrt{\hat v_{k,j}} + \epsilon},$$
 
-which is small for parameters with large historical gradients (large $\hat v_{k,j}$) and large for parameters with small gradients. This is the opposite of the intended uniform shrinkage: high-gradient parameters (often the most important ones) are decayed less.
+which varies per parameter. Parameters with large historical gradients (large $\hat v_{k,j}$) receive small weight decay; parameters with small gradients receive large weight decay. This is the opposite of uniform shrinkage: the adaptive scaling unintentionally distorts what $L_2$ regularization is supposed to do.
 
 AdamW (Loshchilov and Hutter, 2019) fixes this by decoupling weight decay from the gradient update entirely:
 
@@ -385,6 +437,10 @@ $$\frac{\eta}{\sqrt{\hat v_{k,j}}+\epsilon}(\nabla_j L + \lambda\theta_{k,j})$$
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
 </details>
+
+**Pros.** Fixes Adam's broken $L_2$ regularization; uniform, predictable weight decay independent of gradient history; standard optimizer for LLMs and transformers; well-calibrated with $\beta_2 = 0.95$ for long training runs.
+
+**Cons.** Same theoretical issues as Adam (no convergence proof); requires careful tuning of $\lambda$, $\beta_2$, and gradient clipping threshold; slightly more hyperparameters than SGD.
 
 **AdamW in LLM training.** AdamW is the standard optimizer for training transformers and large language models. Practical hyperparameter choices differ from the original Adam defaults:
 
@@ -477,6 +533,10 @@ $$\theta_{k+1} = \mathrm{prox}_{\eta R}\!\left(\theta_k - \eta\nabla L(\theta_k)
 
 $$L(\theta_k) + R(\theta_k) - (L(\theta^*) + R(\theta^*)) \le \frac{\|\theta_0 - \theta^*\|^2}{2\eta k} = O(1/k).$$
 
+**Pros.** Handles non-smooth regularizers exactly; $L_1$ gives exact sparse solutions via soft-thresholding; clean convergence guarantee; each step is cheap when the proximal operator has a closed form.
+
+**Cons.** Requires full-batch gradients for convergence guarantee; $O(1/k)$ rate is the same as plain GD; slow without acceleration (use FISTA instead in practice).
+
 ### FISTA
 
 Apply Nesterov acceleration to proximal gradient:
@@ -484,6 +544,10 @@ Apply Nesterov acceleration to proximal gradient:
 $$\theta_{k+1} = \mathrm{prox}_{\eta R}(y_k - \eta\nabla L(y_k)), \qquad y_{k+1} = \theta_{k+1} + \frac{k}{k+3}(\theta_{k+1}-\theta_k).$$
 
 This achieves $O(1/k^2)$, optimal for composite convex problems. FISTA is the standard algorithm for lasso, group lasso, and nuclear norm minimization.
+
+**Pros.** Optimal $O(1/k^2)$ rate for composite convex problems; drop-in replacement for ISTA; standard for lasso and sparse recovery.
+
+**Cons.** Full-batch only; occasional restart heuristics needed in practice for nonconvex problems; momentum coefficient sensitive to problem conditioning.
 
 ### ADMM
 
@@ -493,6 +557,10 @@ $$\min_{\theta,z}\; L(\theta) + R(z) \quad \text{subject to } \theta = z.$$
 
 ADMM alternates: update $\theta$ (gradient step on augmented Lagrangian), update $z$ (proximal step on $R$), update dual variable $u$. ADMM is useful when $\theta$ and $z$ involve different structures (e.g., group sparsity, matrix completion).
 
+**Pros.** Handles complex constraints and consensus problems; each subproblem often has a closed form; distributed-computing friendly (each node solves a local subproblem).
+
+**Cons.** Linear convergence rate at best; many hyperparameters (augmented Lagrangian penalty, step sizes); convergence theory requires convexity; sensitive to penalty parameter tuning.
+
 ## Second-Order Methods
 
 Gradient descent uses the gradient $\nabla L$ (first-order information). Newton's method uses the Hessian $\nabla^2 L$ to scale steps by local curvature:
@@ -501,19 +569,35 @@ $$\theta_{k+1} = \theta_k - [\nabla^2 L(\theta_k)]^{-1} \nabla L(\theta_k).$$
 
 Near a solution, Newton converges quadratically. The cost is computing and inverting the $p \times p$ Hessian, which is $O(p^3)$ per step and infeasible for large neural networks ($p \sim 10^8$).
 
+**Pros of Newton's method.** Q-quadratic convergence near a solution; handles ill-conditioned problems naturally; no learning rate tuning needed.
+
+**Cons of Newton's method.** $O(p^3)$ per step; $O(p^2)$ memory for Hessian; requires exact Hessian (not available in stochastic setting); impractical beyond $p \sim 10^4$.
+
 **Conjugate Gradient (CG).** For quadratic objectives $L(\theta) = \frac{1}{2}\theta^T A\theta - b^T\theta$ with $A \succ 0$, CG finds the exact solution in at most $p$ steps without forming or inverting $A$. At each step it chooses a search direction conjugate to all previous directions under $A$-inner product ($d_i^T A d_j = 0$ for $i \ne j$), which guarantees no progress is undone. Convergence rate depends on the condition number: $\|\theta_k - \theta^*\|_A \le 2\left(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\right)^k \|\theta_0 - \theta^*\|_A$.
 
 For nonlinear objectives, Nonlinear CG (Fletcher-Reeves, Polak-Ribière) generalizes the update direction using the current gradient, with periodic restarts. CG requires no matrix storage beyond the current gradient and direction, using only $O(p)$ memory.
 
 **Hessian-free optimization** uses CG to solve the Newton system $\nabla^2 L(\theta)\,d = -\nabla L(\theta)$ without forming $\nabla^2 L$. The key: CG only needs matrix-vector products $\nabla^2 L(\theta)\,v$, which can be computed via finite differences of gradients, $(\nabla L(\theta + \epsilon v) - \nabla L(\theta))/\epsilon$, at cost $O(p)$ per product. This makes second-order methods tractable for moderately large networks.
 
+**Pros of CG.** Exact solution for quadratics in $p$ steps; $O(p)$ memory; enables Hessian-free second-order methods via cheap $Hv$ products.
+
+**Cons of CG.** Exact only for quadratics; requires restarts for nonlinear objectives; sensitive to preconditioning; less commonly used now that AdamW dominates in practice.
+
 **Quasi-Newton methods (L-BFGS)** approximate the Hessian inverse using the history of gradient differences, requiring only $O(mp)$ memory for $m$ stored vectors. L-BFGS is the standard choice for small-to-medium scale problems where full-batch gradients are available (e.g., logistic regression, shallow networks).
+
+**Pros of L-BFGS.** Superlinear convergence; handles ill-conditioning well without forming the full Hessian; $O(mp)$ memory with $m$ typically 5–20; gold standard for full-batch convex problems.
+
+**Cons of L-BFGS.** Requires full-batch gradients (incompatible with SGD); $O(mp)$ memory and overhead still too large for $p \sim 10^8$; convergence degrades with noisy gradients.
 
 **Natural gradient.** Replace the Euclidean gradient with the Riemannian gradient under the Fisher information metric:
 
 $$\theta_{k+1} = \theta_k - \eta F(\theta_k)^{-1} \nabla L(\theta_k),$$
 
 where $F(\theta) = E[\nabla \log p(y|x,\theta)\nabla \log p(y|x,\theta)^T]$ is the Fisher matrix. This is equivalent to steepest descent in distribution space (KL divergence) rather than parameter space. K-FAC and Shampoo are practical approximations used in large-scale training.
+
+**Pros of natural gradient.** Invariant to reparameterization; fast convergence near a solution; theoretically optimal for probabilistic models.
+
+**Cons of natural gradient.** Fisher matrix is $O(p^2)$ to store and $O(p^3)$ to invert; K-FAC and Shampoo approximations are complex to implement and tune; communication-heavy in distributed training.
 
 ## Loss Landscape in Deep Learning
 
@@ -528,6 +612,10 @@ Deep networks are nonconvex. The classical worry was local minima, but empirical
 $$\min_\theta \max_{\|\epsilon\|\le\rho} L(\theta + \epsilon).$$
 
 The inner maximization is approximated by one gradient ascent step: $\hat\epsilon = \rho \nabla L(\theta) / \|\nabla L(\theta)\|$. The outer step then follows $\nabla L(\theta + \hat\epsilon)$. SAM adds one extra forward-backward pass per step but consistently improves generalization in image and language tasks.
+
+**Pros.** Consistently improves generalization by finding flatter minima; can be paired with any base optimizer (SGD, AdamW); single extra hyperparameter $\rho$.
+
+**Cons.** Exactly $2\times$ compute per step (two forward-backward passes); no convergence theory for nonconvex objectives; $\rho$ requires tuning; less commonly used in LLM training where compute is the binding constraint.
 
 ## Practical Tricks for Deep Learning and LLM Training
 
@@ -619,9 +707,41 @@ Stage 3 reduces per-GPU memory by $3G\times$ at the cost of extra all-gather com
 
 ### Pre-norm vs Post-norm
 
-The original transformer (Vaswani et al., 2017) uses **post-norm**: $x \leftarrow \mathrm{LayerNorm}(x + \mathrm{Sublayer}(x))$. Modern LLMs use **pre-norm**: $x \leftarrow x + \mathrm{Sublayer}(\mathrm{LayerNorm}(x))$.
+Every transformer layer applies two sublayers (attention and feed-forward) with a residual connection and LayerNorm. The question is where LayerNorm goes relative to the sublayer.
 
-Pre-norm keeps the residual stream unnormalized, so gradients flow directly through the skip connection without passing through LayerNorm at every layer. This prevents gradient vanishing in deep networks and makes training more stable without warmup being as critical. GPT-2 and all subsequent GPT-family models use pre-norm.
+**Post-norm** (original transformer, Vaswani et al., 2017) normalizes after the residual add:
+
+$$h \leftarrow \mathrm{LN}(h + \mathrm{Sublayer}(h))$$
+
+**Pre-norm** (GPT-2 onward, LLaMA, PaLM) normalizes before the sublayer:
+
+$$h \leftarrow h + \mathrm{Sublayer}(\mathrm{LN}(h))$$
+
+The residual stream $h$ is left unnormalized in pre-norm; only the input to each sublayer is normalized.
+
+**Why pre-norm trains more stably.** The key difference is how gradients travel backward through $L$ layers. In post-norm, every backward pass through a layer crosses a LayerNorm, which rescales by $1/\hat{\sigma}$ where $\hat{\sigma}$ is the standard deviation of the pre-norm activations. If $\hat{\sigma}$ is large (which happens as the network grows during training), this factor shrinks gradients layer by layer, causing vanishing gradients.
+
+In pre-norm the Jacobian of layer $l$ with respect to $h_{l-1}$ is:
+
+$$\frac{\partial h_l}{\partial h_{l-1}} = I + \frac{\partial \,\mathrm{Sublayer}(\mathrm{LN}(h_{l-1}))}{\partial h_{l-1}}$$
+
+The identity block $I$ provides a direct gradient highway back through all $L$ layers. Even if the sublayer Jacobian is small at initialization, the gradient is:
+
+$$\frac{\partial \mathcal{L}}{\partial h_0} = \prod_{l=1}^{L}\left(I + J_l\right)$$
+
+This product always contains the all-identity path (value 1 in each coordinate), so the gradient cannot vanish completely regardless of depth.
+
+<details>
+<summary>Gradient norm at initialization and warmup sensitivity</summary>
+<p>At random initialization the sublayer outputs are close to zero, so $J_l \approx 0$ and each Jacobian $\approx I$. Under post-norm, LayerNorm is applied to $h + \mathrm{Sublayer}(h) \approx h$, so the normalization statistics are well-behaved early on. But as training progresses and sublayer norms grow, the post-norm LayerNorm must rescale increasingly large residuals, which creates instability spikes if the learning rate is not carefully warmed up.</p>
+<p>Under pre-norm, LayerNorm always sees the input $h$ before the sublayer adds to it, so its statistics are controlled at every training step. This makes pre-norm substantially less sensitive to learning rate warmup. Xiong et al. (2020) showed analytically that gradient norms at initialization are $O(L)$ times smaller in post-norm than in pre-norm, which is why post-norm requires warmup to prevent the optimizer from taking huge steps early on.</p>
+<p>One trade-off: because the residual stream in pre-norm can grow unboundedly across layers (no normalization at layer boundaries), the representation norms do increase with depth. LLaMA addresses this with RMSNorm (a simplified LayerNorm without mean subtraction) and keeps weight norms in check via weight decay.</p>
+</details>
+
+**In practice:**
+- Post-norm can achieve slightly better final perplexity with careful tuning, but is harder to train at large scale.
+- Pre-norm is the default for all modern large-scale LLMs (GPT-2/3/4, LLaMA, Mistral, PaLM) because it is stable out of the box without per-run warmup tuning.
+- LLaMA replaces LayerNorm with RMSNorm ($\mathrm{RMSNorm}(x) = x / \sqrt{\frac{1}{d}\sum_i x_i^2 + \epsilon}$), dropping the mean-subtraction step for efficiency while keeping the variance-normalization benefit.
 
 ## Comparison
 
@@ -630,7 +750,7 @@ Pre-norm keeps the residual stream unnormalized, so gradients flow directly thro
 | GD | $O(n)$ | No | $O(1/k)$ | Baseline |
 | SGD | $O(1)$ | No | $O(1/\sqrt{k})$ | Noisy; needs decay schedule |
 | Nesterov | $O(n)$ | No | $O(1/k^2)$ | Optimal first-order |
-| AdaGrad | $O(1)$ | Yes | $O(\log k/\sqrt{k})$ | Good for sparse; LR decays to zero |
+| AdaGrad | $O(1)$ | Yes | $\tilde{O}(1/\sqrt{k})$ | Good for sparse; LR decays to zero |
 | RMSprop | $O(1)$ | Yes | Not proven | AdaGrad without LR decay |
 | Adam | $O(1)$ | Yes | Not proven | Default for deep learning; L2 reg broken |
 | AdamW | $O(1)$ | Yes | Same as Adam | Standard for LLMs; $\beta_2{=}0.95$, clip |
