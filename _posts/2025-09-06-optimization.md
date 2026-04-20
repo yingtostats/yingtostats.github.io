@@ -24,15 +24,25 @@ Here $\ell(\theta; x_i, y_i)$ is the **per-sample loss** (e.g., cross-entropy $-
 
 Two classification systems are commonly used and should not be confused.
 
-**R-rate (global rate)** asks: after $k$ steps total, how small is the error? It describes the overall trajectory of $$\|\theta_k - \theta^*\|$$ as a function of $k$, giving a global envelope like $O(1/k)$ or $O(a^k)$. Named "R" for *root* because it is formally defined via $\limsup_{k\to\infty} \|\theta_k - \theta^*\|^{1/k}$.
+**R-rate (global rate)** asks: after $k$ steps total, how small is the error? It describes the overall trajectory of
 
-**Q-rate (local ratio)** asks: how much does step $k+1$ improve over step $k$? It looks only at consecutive pairs: 
+$$\|\theta_k - \theta^*\|$$
 
-$$\frac{\|\theta_{k+1} - \theta^*\|} {\|\theta_k - \theta^*\|^q},$$
+as a function of $k$, giving a global envelope like
 
- and classifies convergence by the order $q$. Named "Q" for *quotient*.
+$$O(1/k) \quad \text{or} \quad O(a^k).$$
 
-The two are related but distinct. Q-linear (constant ratio $< 1$ at every step) implies R-linear (geometric global decay). But R-linear does not imply Q-linear: the step-by-step ratio could spike occasionally yet still yield geometric decay on average. Q-rate is more informative near a solution; R-rate is the right tool for comparing algorithms globally.
+Named "R" for *root* because it is formally defined via
+
+$$\limsup_{k\to\infty} \|\theta_k - \theta^*\|^{1/k}.$$
+
+**Q-rate (local ratio)** asks: how much does step $k+1$ improve over step $k$? It looks only at consecutive pairs:
+
+$$\frac{\|\theta_{k+1} - \theta^*\|}{\|\theta_k - \theta^*\|^q},$$
+
+and classifies convergence by the order $q$. Named "Q" for *quotient*.
+
+The two are related but distinct. Q-linear (constant ratio less than 1 at every step) implies R-linear (geometric global decay). But R-linear does not imply Q-linear: the step-by-step ratio could spike occasionally yet still yield geometric decay on average. Q-rate is more informative near a solution; R-rate is the right tool for comparing algorithms globally.
 
 ### R-rate: Global Rate of Decay
 
