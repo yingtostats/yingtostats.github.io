@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'jekyll', '~> 4.3'
-gem 'nokogiri', '~> 1.16'
+gem 'nokogiri', '~> 1.19'
 gem 'jekyll-sass-converter', '~> 2.2'
 gem 'rake'
 gem 'rouge', '~> 4.0'

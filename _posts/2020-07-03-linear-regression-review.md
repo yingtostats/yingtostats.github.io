@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Linear Regression Review: Geometry, Inference, and Selection"
-date:   2025-07-03 21:00:00
+date:   2020-07-03 21:00:00
 tag:
 - Statistics
 - Regression
@@ -704,6 +704,39 @@ $$
 $$
 
 <details>
+<summary><span style="color: saddlebrown; font-style: italic;">Why $\hat\beta_1$ changes when you add $x_2$: partial effects, multicollinearity, and sign flips</span></summary>
+
+<p><strong>What changes and why.</strong> In the simple model $y \sim x_1$, $\hat\beta_1$ captures all association between $x_1$ and $y$, including anything shared with $x_2$. In the multiple model $y \sim x_1 + x_2$, $\hat\beta_1$ measures the effect of $x_1$ <em>holding $x_2$ fixed</em>. It uses only the variation in $x_1$ that is orthogonal to (not explained by) $x_2$.</p>
+
+<p><strong>Formal view.</strong> The multiple regression coefficient can be written as:</p>
+
+$$\hat\beta_1^{(x_1 + x_2)} = \frac{\mathrm{Cov}(y, \tilde{x}_1)}{\mathrm{Var}(\tilde{x}_1)},$$
+
+<p>where $\tilde{x}_1$ is the residual of $x_1$ after regressing out $x_2$ (i.e., the part of $x_1$ that $x_2$ cannot explain). The numerator is the covariance of $y$ with this residual; the denominator is the remaining variance of $x_1$.</p>
+
+<p><strong>What happens as $\rho_{12}$ increases.</strong> When $x_1$ and $x_2$ are highly correlated, most of $x_1$'s variation is explained by $x_2$, so $\mathrm{Var}(\tilde{x}_1) \to 0$. With a tiny denominator:</p>
+
+<ul>
+<li>The estimate becomes <strong>noisy</strong> (high variance, wide confidence intervals).</li>
+<li>The coefficient can <strong>shrink toward zero</strong> because the numerator also shrinks (less unique covariance with $y$).</li>
+<li>The coefficient can <strong>flip sign</strong> when $\rho_{12}$ exceeds $\rho_{2y}/\rho_{1y}$, because the numerator $\rho_{1y} - \rho_{12}\rho_{2y}$ in the standardized formula can change sign even though both $\rho_{1y} > 0$ and $\rho_{2y} > 0$.</li>
+</ul>
+
+<p><strong>Omitted variable bias vs multicollinearity.</strong> These are opposite sides of the same coin:</p>
+
+<ul>
+<li><strong>Simple model</strong> ($y \sim x_1$ only): $\hat\beta_1$ is stable and precise, but <em>biased</em> if $x_2$ is a true predictor that is correlated with $x_1$. The bias is $\rho_{12} \cdot \beta_2$, which pushes $\hat\beta_1$ away from its true value.</li>
+<li><strong>Multiple model</strong> ($y \sim x_1 + x_2$): $\hat\beta_1$ is <em>unbiased</em> (if the model is correct), but has high variance and can be unstable when $\rho_{12}$ is large.</li>
+</ul>
+
+<p>Adding $x_2$ trades bias for variance. In the simple model you get a wrong but stable answer; in the multiple model you get the right answer on average but any single estimate may be far off.</p>
+
+<p><strong>Extreme case: perfect collinearity.</strong> If $x_1 = x_2$ exactly, $\mathrm{Var}(\tilde{x}_1) = 0$ and the denominator is zero. The design matrix $X^\top X$ is singular, and OLS cannot produce estimates at all. The model is not identifiable because infinitely many combinations of $\beta_1$ and $\beta_2$ produce the same predictions.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
+<details>
 <summary><span style="color: saddlebrown; font-style: italic;">Two-predictor formula derivation via $2\times 2$ matrix inversion</span></summary>
 
 <p>For standardized predictors <span>$(x_1, x_2)$</span> with unit variance and correlation <span>$\rho_{12}$</span>, the matrix <span>$X^T X / n$</span> (ignoring the intercept block) is</p>
@@ -775,6 +808,37 @@ Note that $\hat\beta_{2}$ flips sign at $\rho_{12} > \rho_{2y}/\rho_{1y} = 0.4/0
 * Ridge regression when prediction stability is the primary goal.
 * Lasso when sparsity and interpretability are needed.
 * Principal components regression (PCR) when the collinearity has a low-dimensional structure.
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">Choosing a remedy: prediction vs interpretation, and when each method makes sense</span></summary>
+
+<p>All remedies address the same underlying problem: there is not enough independent variation in $x_1$ and $x_2$ to identify both effects cleanly. The right choice depends on whether you care about prediction performance or interpretable coefficients.</p>
+
+<p><strong>1. Regularization: Ridge or Elastic Net (default for prediction).</strong> Ridge (L2 penalty) shrinks correlated coefficients toward each other, sharing the weight. It does not require choosing which variable to keep and handles many correlated features simultaneously. Elastic Net combines L1 and L2 and can zero out some coefficients while shrinking others. Use when the goal is prediction and you do not need clean interpretation of individual coefficients. This is usually the best practical first choice for prediction tasks.</p>
+
+<p><strong>2. Drop one feature (simplest, often strong).</strong> Pick the predictor with higher correlation with $y$ or better out-of-sample performance and discard the other. Use when the features are near-duplicates (e.g., two measures of the same quantity), when interpretability matters, or when you want a simple model. Surprisingly effective in practice because the dropped variable's signal is mostly captured by the retained one.</p>
+
+<p><strong>3. Residualization (orthogonalization).</strong> Construct the residual $x_2^{\perp} = x_2 - \hat{x}_2(x_1)$ (the part of $x_2$ not explained by $x_1$), then regress $y \sim x_1 + x_2^{\perp}$. Now $x_1$ carries the "baseline effect" and $x_2^{\perp}$ carries the "incremental effect beyond $x_1$." Use when you care about causal or incremental interpretation (common in economics and causal inference). The downside is that it is asymmetric: residualizing $x_2$ on $x_1$ gives different results than residualizing $x_1$ on $x_2$, so you must choose which variable is the baseline based on domain knowledge.</p>
+
+<p><strong>4. Combine into a single variable.</strong> Form a weighted average $z = \alpha x_1 + (1-\alpha) x_2$ (e.g., $\alpha = 0.5$ for equal weighting, or proportional to each variable's correlation with $y$). Use when both variables measure the same latent concept (e.g., two noisy measures of income, two correlated risk scores). Reduces the problem from two noisy estimates to one stable estimate of the underlying factor.</p>
+
+<p><strong>5. Ratio $x_2 / x_1$.</strong> Use only when theory supports a ratio interpretation: price per unit, rate of return, efficiency (output/input). Do not use ratios solely to "fix" correlation; this introduces spurious nonlinearity and can distort inference if the ratio has no substantive meaning.</p>
+
+<p><strong>6. PCA / latent factor.</strong> Extract the first principal component of $(x_1, x_2)$, which captures the shared variation. Regress $y$ on this component (or the top $K$ components for many predictors). Use when there are many correlated variables and you want a low-dimensional representation. The tradeoff is reduced interpretability: the principal component is a linear combination, not a single observable feature.</p>
+
+<p><strong>Practical decision tree:</strong></p>
+
+<ul>
+<li><strong>Goal is prediction:</strong> Ridge or Elastic Net (first choice). PCA if there are many correlated features.</li>
+<li><strong>Goal is interpretation, features measure the same thing:</strong> combine (average or PCA).</li>
+<li><strong>Goal is interpretation, want incremental effect:</strong> residualize.</li>
+<li><strong>Goal is interpretation, features are redundant:</strong> drop one.</li>
+<li><strong>Theory says ratio is meaningful:</strong> use the ratio.</li>
+<li><strong>Unsure:</strong> fit the full model, check VIF and coefficient stability across cross-validation folds, then try Ridge and drop-one, and compare out-of-sample performance.</li>
+</ul>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
 
 **Principal components regression.** Multicollinearity means the columns of $X$ are nearly linearly dependent, so $X^TX$ has small eigenvalues and OLS amplifies the corresponding directions. PCR addresses this by rotating to the principal component basis via the SVD of $X$, retaining only the $K$ directions of highest variance, and regressing $y$ on those $K$ components. The low-variance directions that drive coefficient instability are discarded entirely.
 
