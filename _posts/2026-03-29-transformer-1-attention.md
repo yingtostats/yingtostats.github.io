@@ -569,7 +569,7 @@ the   [  0.02  0.08  0.1   0.3   0.5    0  ]
 mat   [  0.01  0.04  0.05  0.1   0.3   0.5]
 </code></pre>
 
-<p>Each row sums to 1 over its allowed positions. The zeros above the diagonal come from the $-\infty$ mask making $e^{-\infty} = 0$ in softmax. The critical property: <strong>row $t$'s output depends only on tokens $0, \ldots, t$</strong>, even though all rows are computed in the same matrix multiply. Row 2 ("sat") is computed using only "The", "cat", "sat" — exactly as if the model only saw those three tokens.</p>
+<p>Each row sums to 1 over its allowed positions. The zeros above the diagonal come from the $-\infty$ mask making $e^{-\infty} = 0$ in softmax. The critical property: <strong>row $t$'s output depends only on tokens $0, \ldots, t$</strong>, even though all rows are computed in the same matrix multiply. Row 2 ("sat") is computed using only "The", "cat", "sat", exactly as if the model only saw those three tokens.</p>
 
 <p>After all $L$ transformer blocks, the model produces an output vector $h_t \in \mathbb{R}^{d_{model}}$ for each position $t$. Each $h_t$ was built using only tokens $0, \ldots, t$ (the mask was applied at every layer). Now each position independently predicts the next token:</p>
 
@@ -646,6 +646,28 @@ $$Q = X_{\text{decoder}} W_Q, \quad K = X_{\text{encoder}} W_K, \quad V = X_{\te
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
 </details>
+
+## Key Takeaways
+
+**Attention is a soft database lookup.** Each token produces a query (what am I looking for?), a key (what do I advertise?), and a value (what content do I contribute?). The $QK^T$ matrix is the relevance scores; softmax normalizes them into weights; multiplication by $V$ returns a weighted average of content. Every other attention variant (multi-head, causal, cross-attention) is a modification of this core operation.
+
+**Q, K, V separation is not optional.** Without separate projections, one vector must simultaneously encode "what I'm looking for" and "what I offer," which are conflicting roles. Without separate $V$, the matching signal (keys) gets confused with the content signal (values), and tokens with similar roles but different meanings become indistinguishable in the output.
+
+**The causal mask is a data restriction, not a computation dependency.** All rows of the attention matrix read from the same key/value vectors and are computed in one parallel matrix multiply. The mask only controls which positions each row can see. This is why transformers parallelize during training while RNNs cannot: RNN hidden states depend on previous hidden states, creating a true sequential dependency.
+
+**$\sqrt{d_k}$ scaling prevents softmax saturation.** Dot products grow with dimension ($q \cdot k$ has variance $\sim d_k$ for unit-variance entries). Without scaling, large dot products push softmax into near-one-hot outputs where gradients vanish. Dividing by $\sqrt{d_k}$ keeps the variance at 1 regardless of head dimension.
+
+**Multi-head attention learns parallel attention patterns.** A single attention head can only compute one weighted average per token. Multiple heads let the model attend to different things simultaneously (syntax in one head, coreference in another). The output projection $W_O$ merges these perspectives back into a single representation.
+
+**A transformer block has exactly two operations.** Attention mixes information across tokens (inter-token communication). The FFN transforms each token independently (per-token computation). Residual connections and normalization are stabilizers, not computations. Everything else in a transformer is a variation on how these two operations are arranged and scaled.
+
+**Decoder-only won for LLMs because it is simpler.** Encoder-decoder requires a clear input/output separation (good for translation). Decoder-only treats everything as one continuous sequence (prompt + response), which is more flexible for open-ended generation. At sufficient scale, the simpler architecture matches or exceeds encoder-decoder on most tasks.
+
+**Tradeoff: sequence length vs compute cost.** Self-attention computes a $T \times T$ score matrix, so compute scales as $O(T^2 d)$ and memory as $O(T^2)$. Doubling the context window quadruples the attention cost. This is why efficient attention variants (FlashAttention, sparse attention, linear attention) exist: they reduce the $T^2$ bottleneck at the cost of approximating the full attention pattern or limiting which positions each token can attend to.
+
+**Tradeoff: number of heads vs head dimension.** For a fixed model dimension $d_{\text{model}}$, more heads means smaller per-head dimension $d_k = d_{\text{model}} / H$. More heads provide more parallel attention patterns (richer expressiveness), but each head works in a lower-dimensional space (less capacity per pattern). Too few heads limit what the model can attend to simultaneously; too many heads make each head's representation too coarse. Standard practice: $d_k = 64$ or $128$, and set $H = d_{\text{model}} / d_k$.
+
+**Tradeoff: absolute vs relative positional encoding.** Absolute encoding (sinusoidal, learned) is simple but cannot generalize to sequence lengths unseen during training. Relative encoding (RoPE, ALiBi) encodes position as a function of distance between tokens, enabling extrapolation to longer sequences. The cost: relative encodings are more complex to implement and add compute overhead to the attention score calculation. Modern LLMs overwhelmingly use RoPE for this reason.
 
 ## Beginner Mental Model
 

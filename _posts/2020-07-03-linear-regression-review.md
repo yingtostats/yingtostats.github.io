@@ -7,6 +7,7 @@ tag:
 - Regression
 projects: true
 blog: true
+published: false
 author: YingZhang
 description: Linear regression review covering geometry, ANOVA, inference, collinearity, regularization, and feature selection.
 fontsize: 23pt

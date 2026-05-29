@@ -753,6 +753,44 @@ This product always contains the all-identity path (value 1 in each coordinate),
 - Pre-norm is the default for all modern large-scale LLMs (GPT-2/3/4, LLaMA, Mistral, PaLM) because it is stable out of the box without per-run warmup tuning.
 - LLaMA replaces LayerNorm with RMSNorm ($\mathrm{RMSNorm}(x) = x / \sqrt{\frac{1}{d}\sum_i x_i^2 + \epsilon}$), dropping the mean-subtraction step for efficiency while keeping the variance-normalization benefit.
 
+## Key Takeaways
+
+**Noise is a feature, not a bug.** SGD's gradient noise prevents convergence to sharp minima and enables escape from saddle points. The convergence cost ($O(1/\sqrt{k})$ vs $O(1/k)$) is a worthwhile tradeoff when $n$ is large, because each step costs $O(1)$ instead of $O(n)$.
+
+**Adaptivity solves the multi-scale problem.** Parameters in a neural network have wildly different gradient magnitudes (embedding layers vs attention heads vs output projections). A single learning rate cannot serve all of them well. AdaGrad discovered per-parameter scaling; RMSprop fixed its decay; Adam added momentum. The progression is logical, not arbitrary.
+
+**Weight decay and $L_2$ are not the same thing under adaptive optimizers.** With plain SGD, the two are identical: adding $\frac{\lambda}{2}\lVert\theta\rVert^2$ to the loss produces a gradient $\nabla L + \lambda\theta$, and the update becomes
+
+$$\theta \leftarrow \theta - \eta(\nabla L + \lambda\theta) = (1 - \eta\lambda)\,\theta - \eta\,\nabla L.$$
+
+The $(1 - \eta\lambda)$ factor shrinks every weight uniformly by $\eta\lambda$ per step. This uniform shrinkage is what "weight decay" means.
+
+With Adam, the same $L_2$ in the loss produces the same gradient $\nabla L + \lambda\theta$, but now it passes through the adaptive scaling. The effective decay on parameter $j$ becomes
+
+$$\text{effective decay}_j = \frac{\eta\lambda}{\sqrt{\hat{v}_{k,j}} + \epsilon}$$
+
+which varies per parameter. Parameters with large historical gradients (large $\hat{v}_{k,j}$) get less decay; parameters with small gradients get more decay. The adaptive mechanism, which was designed to normalize the learning step, unintentionally distorts the regularization.
+
+AdamW fixes this by applying the decay directly to $\theta$ after the Adam step:
+
+$$\theta_{k+1} = \theta_k - \frac{\eta}{\sqrt{\hat{v}_k} + \epsilon}\,\hat{m}_k - \eta\lambda\,\theta_k.$$
+
+The decay term $\eta\lambda\,\theta_k$ is never scaled by $\hat{v}_k$, so every parameter shrinks uniformly. In practice, this means: always use `weight_decay` in AdamW (not `L2` in the loss), and only apply it to weight matrices, not to biases or layer norm parameters (which should not be regularized toward zero).
+
+**The learning rate schedule encodes your training strategy.** Warmup prevents instability from large early gradients. Cosine decay spends more time at intermediate rates (where learning is productive) than linear decay. The schedule is often more important than the optimizer choice itself.
+
+**Proximal methods extend gradient descent to non-smooth problems.** When the regularizer is not differentiable ($\ell_1$, nuclear norm), you cannot take a gradient. The proximal operator replaces the gradient step for the non-smooth part, and the soft-thresholding rule for $\ell_1$ is its most important special case. FISTA accelerates this to the optimal $O(1/k^2)$ rate.
+
+**Second-order methods buy convergence speed with memory.** Newton converges quadratically but costs $O(p^3)$. CG avoids storing the Hessian via matrix-vector products. L-BFGS approximates curvature with $O(mp)$ memory. In practice, AdamW's implicit curvature adaptation (via $v_k$) is "good enough" for the scale of modern deep learning, which is why second-order methods remain niche for LLM training.
+
+**Pre-norm is the stability default.** In a transformer block, LayerNorm can be applied before the sublayer (pre-norm: $h + \text{Sublayer}(\text{LN}(h))$) or after (post-norm: $\text{LN}(h + \text{Sublayer}(h))$). Pre-norm lets the residual stream flow through a clean addition without normalization touching it, so the sublayer always receives a normalized input regardless of how large $h$ has grown. Post-norm must rescale the sum $h + \text{Sublayer}(h)$, which creates instability spikes when sublayer outputs grow during training. Xiong et al. (2020) showed gradient norms at initialization are $O(L)$ times smaller in post-norm, which is why it requires warmup. Post-norm can achieve slightly better final perplexity with careful tuning, but pre-norm is stable out of the box and is the default for all modern LLMs (GPT-2/3/4, LLaMA, Mistral). See the Pre-norm vs Post-norm section above for the full derivation.
+
+**Tradeoff: convergence rate vs per-step cost.** Full-batch GD converges at $O(1/k)$ but costs $O(n)$ per step. SGD converges at $O(1/\sqrt{k})$ but costs $O(1)$ per step. Nesterov achieves the optimal $O(1/k^2)$ but requires full-batch. For a fixed compute budget, SGD reaches a better solution than GD when $n$ is large, despite its slower rate, because it takes far more steps in the same time. The right comparison is always accuracy per FLOP, not accuracy per iteration.
+
+**Tradeoff: adaptivity vs generalization.** Adaptive methods (Adam, AdamW) converge faster than SGD in the early phase because per-parameter scaling handles the multi-scale problem automatically. But SGD with momentum sometimes finds flatter minima that generalize better, especially on vision tasks. The practical compromise: use AdamW for transformers and LLMs (where adaptive scaling is essential), SGD with momentum for CNNs (where flat minima matter more).
+
+**Tradeoff: memory vs curvature information.** GD stores nothing beyond the gradient ($O(p)$). Momentum adds one velocity vector ($O(p)$). Adam adds two moment vectors ($O(3p)$). L-BFGS stores $m$ gradient-difference pairs ($O(mp)$). Newton stores the full Hessian ($O(p^2)$). More curvature information means faster convergence and better conditioning, but at the cost of memory that could hold a larger model or batch. At LLM scale ($p \sim 10^{10}$), even Adam's $3p$ is a significant constraint, which is why optimizer state sharding (ZeRO) exists.
+
 ## Comparison
 
 | Method | Per-step cost | Adaptive LR | Convergence (convex) | Notes |

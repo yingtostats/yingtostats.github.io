@@ -47,9 +47,7 @@ $$p_\theta(x_{t+1} = w \mid x_{\leq t}) = \frac{e^{\text{logits}_{t,w}}}{\sum_{w
 
 <p>For each position, this gives a probability distribution over all $V$ tokens (e.g., 151,936 for Qwen3). The probabilities sum to 1.</p>
 
-<p><strong>This is not a fixed multinomial.</strong> A fixed multinomial would have static probabilities $p_1, \ldots, p_V$ that do not change with input. Here, the probabilities change for every context. $p_\theta(\cdot \mid \text{"The cat"})$ is a completely different distribution from $p_\theta(\cdot \mid \text{"The dog"})$, even though they share the same parameters $\theta$. The transformer is the function that maps each context to a different distribution over the vocabulary.</p>
-
-<p>Training adjusts $\theta$ via gradient descent on the cross-entropy loss so that $p_\theta$ assigns high probability to the actual next token in the training data. Changing $\theta$ changes the distribution at every context simultaneously.</p>
+<p>This is a <strong>conditional probability</strong>: the distribution over the next token depends on all preceding tokens $x_{\leq t}$ through the autoregressive structure. Different contexts produce different distributions, all parameterized by the same $\theta$. Training adjusts $\theta$ via gradient descent on the cross-entropy loss so that $p_\theta$ assigns high probability to the actual next token in the training data.</p>
 
 <p><strong>Cross-entropy loss vs maximum likelihood.</strong> The pretraining objective above is written as maximizing log-likelihood. In practice, training frameworks minimize a loss. The two are the same objective with a sign flip:</p>
 
@@ -626,6 +624,30 @@ User:   What are the treatment options for atrial fibrillation?
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
 </details>
+
+## Key Takeaways
+
+**Next-token prediction is all you need for pretraining.** A single objective (maximize log-likelihood of the next token) trained on trillions of tokens produces models that can write code, reason about math, and hold conversations. The objective is simple; the capability emerges from scale. Cross-entropy loss is the same formula viewed from different angles (maximum likelihood, negative log-likelihood, KL divergence to the one-hot target).
+
+**The three-stage pipeline is the standard recipe.** Pretraining gives broad knowledge and language ability. SFT teaches the model to follow instructions in a specific format. RLHF/DPO aligns the model's preferences with human judgment. Each stage has a distinct role, and skipping one degrades the final product.
+
+**Decoding is where you control the output.** The model produces a probability distribution over the vocabulary; the decoding strategy (greedy, temperature, top-k, top-p) determines how you sample from it. Temperature controls the entropy of the distribution, top-k/top-p truncate the tail. These are not minor details: the same model can appear incoherent or brilliant depending on the decoding settings.
+
+**The KV cache makes autoregressive generation practical.** Without it, generating each new token requires reprocessing the entire sequence through all layers. With it, only the new token is processed, and its K/V vectors are appended to the cache. The memory cost is $2 \times L \times H_{kv} \times T \times d_k$ per sequence, which is why KV cache memory is often the bottleneck for inference serving.
+
+**Scaling is predictable, not magical.** Loss decreases as a smooth power law of compute, data, and model size. The Chinchilla result showed that the optimal allocation is to train a smaller model on more data, not the other way around. Most early LLMs were undertrained relative to their size.
+
+**Context window is not memory.** The model attends to whatever is in the current context window and knows nothing else. For persistent knowledge, you either bake it into the weights (fine-tuning) or inject it at inference time (system prompt, RAG). Each approach has different latency, cost, and freshness tradeoffs.
+
+**Prompt engineering is a core skill, not a hack.** The same model gives vastly different outputs depending on how the question is framed. Be specific, provide examples, specify the output format, and assign a role. Chain-of-thought prompting ("think step by step") significantly improves multi-step reasoning.
+
+**Tradeoff: model size vs data size (Chinchilla).** For a fixed compute budget, you must choose between a larger model trained on less data and a smaller model trained on more data. The Chinchilla scaling law shows that most early LLMs were over-parameterized and under-trained. The optimal allocation roughly follows: tokens $\approx 20 \times$ parameters. Training a 7B model well requires $\sim$140B tokens, not 30B.
+
+**Tradeoff: output quality vs latency in decoding.** Greedy decoding is fastest (one forward pass, take the argmax) but produces repetitive, deterministic text. Temperature sampling adds diversity but risks incoherence at high temperatures. Top-p/top-k truncation finds a middle ground by allowing diversity within a controlled set of likely tokens. Beam search explores multiple candidates but multiplies compute by the beam width. For interactive applications, the latency cost of sophisticated decoding directly trades against response quality.
+
+**Tradeoff: KV cache memory vs generation speed.** The KV cache eliminates redundant recomputation (each new token only requires one forward pass instead of $T$), but stores $O(L \times H_{kv} \times T \times d_k)$ per active sequence. Serving many concurrent users multiplies this by the number of sequences, often exceeding the model weights themselves in memory. Grouped-query attention (GQA) reduces the cache by sharing K/V across heads, trading a small accuracy loss for $4\text{-}8\times$ memory savings.
+
+**Tradeoff: RAG vs fine-tuning for knowledge.** Fine-tuning bakes knowledge into model weights (always available, no context cost, but expensive to update and risks catastrophic forgetting). RAG injects knowledge at inference time via the context window (instantly updatable, no retraining, but consumes context tokens and depends on retrieval quality). For static domain expertise, fine-tune. For dynamic or large-scale knowledge bases, RAG. Most production systems combine both.
 
 ## Next Post
 

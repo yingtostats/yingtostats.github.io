@@ -775,6 +775,28 @@ The underlying data in memory does not change during a `view` or `reshape`. Thes
 
 When an operation fails with a shape mismatch, print the shape of every input tensor right before the failing line. The error is almost always that two axes that should be the same size are not, or that a dimension is in the wrong position. Naming your axes makes the fix obvious.
 
+## Key Takeaways
+
+**The loss function defines what "good" means.** Cross-entropy for classification, MSE for regression. Choosing the wrong loss (e.g., MSE for classification) does not just hurt performance; it changes what the model learns to represent. Cross-entropy directly optimizes predicted probabilities; MSE optimizes squared distance, which has no probabilistic interpretation for discrete labels.
+
+**Gradients vanish or explode multiplicatively.** Through $L$ layers, the gradient is a product of $L$ Jacobians. If each has spectral norm $< 1$, the product shrinks exponentially (vanishing). If $> 1$, it grows exponentially (exploding). Every stabilization trick (initialization, normalization, residual connections, gradient clipping) addresses this multiplicative chain.
+
+**Residual connections are the single most important architectural trick.** Without them, gradients must pass through every layer's activation and weight matrix. With them, the gradient has a direct additive path from output to any earlier layer. This is why very deep networks (100+ layers) are trainable at all.
+
+**Normalization and initialization are two solutions to the same problem.** Both aim to keep activations at a controlled scale across depth. Initialization sets the right scale at step 0. Normalization enforces it at every step. In practice you need both: initialization for stable early training, normalization to maintain stability as weights drift during optimization.
+
+**Embeddings are lookup tables, not learned transformations.** An embedding maps a categorical index to a dense vector by table lookup, which is mathematically equivalent to multiplying a one-hot vector by a weight matrix, but without computing the full one-hot. This is why embedding layers have no bias and no activation.
+
+**Debug with curves, not final numbers.** A single validation accuracy tells you almost nothing. Loss curves, gradient norms over time, activation distributions per layer, and model outputs on fixed examples each diagnose a different failure mode. Flat loss = dead neurons or zero gradients. Spiking loss = exploding gradients. Train/val gap = overfitting. Build the habit of plotting these before tuning hyperparameters.
+
+**Learning rate, batch size, and schedule interact.** Doubling batch size has roughly the same effect as halving the learning rate (linear scaling rule). Warmup prevents instability at the start; decay prevents oscillation at the end. Tune them together, not independently.
+
+**Tradeoff: bias vs variance (the classic).** Underfitting (high bias) means the model is too simple to capture the pattern. Overfitting (high variance) means the model memorizes noise. Every regularization technique (dropout, weight decay, early stopping, smaller model) reduces variance at the cost of some bias. The optimal point is where the sum of the two is minimized, which is what the validation loss measures.
+
+**Tradeoff: training speed vs memory.** Gradient checkpointing recomputes activations during the backward pass instead of storing them, cutting memory by $O(L)$ at the cost of one extra forward pass. Mixed precision (FP16/BF16) halves memory and speeds up computation, but can lose numerical precision for operations like loss computation and normalization (which is why a master copy in FP32 is kept). Both are standard for training models that would otherwise not fit in GPU memory.
+
+**Tradeoff: regularization strength vs fitting speed.** Strong regularization (high dropout rate, large weight decay, aggressive early stopping) prevents overfitting but slows convergence and can underfit. Weak regularization trains faster but risks overfitting. The right setting depends on the data-to-parameter ratio: with abundant data and a small model, you need little regularization; with limited data and a large model, you need much more.
+
 ## Why This Matters for LLMs
 
 Transformer FFN layers are trained with exactly these principles at much larger scale. Token embeddings are just a large categorical embedding table, and many LLM stability tricks are the same ideas here repeated at scale: normalization, initialization, learning-rate schedules, clipping, and regularization. If MLP training feels clear, transformer training is conceptually easier.

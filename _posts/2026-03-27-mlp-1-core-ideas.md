@@ -665,7 +665,7 @@ Rule of thumb: start with ReLU (general deep learning) or GELU (transformer-styl
           \mathrm{Var}(W)=\frac{2}{d_{in}}, \quad W_{ij}\sim\mathcal{N}\!\left(0,\;\frac{2}{d_{in}}\right)
           $$
 
-        - Why not all zeros? Every neuron computes the same output, so every gradient is identical and the network can never break symmetry — it effectively has only one neuron per layer. Why not large random values? For Sigmoid/Tanh, large pre-activations push $e^{-x}$ toward $0$ or $\infty$, saturating outputs at their extremes (0/1 for Sigmoid, $\pm 1$ for Tanh) where gradients $\to 0$ — so learning stalls (vanishing gradients). For ReLU and other unbounded activations, large weights cause activations to grow unchecked through layers, quickly reaching NaN (exploding activations).
+        - Why not all zeros? Every neuron computes the same output, so every gradient is identical, and the network can never break symmetry (it effectively has only one neuron per layer). Why not large random values? For Sigmoid/Tanh, large pre-activations push $e^{-x}$ toward $0$ or $\infty$, saturating outputs at their extremes (0/1 for Sigmoid, $\pm 1$ for Tanh) where gradients $\to 0$, so learning stalls (vanishing gradients). For ReLU and other unbounded activations, large weights cause activations to grow unchecked through layers, quickly reaching NaN (exploding activations).
     - Learning rate: start with a moderate value (e.g., $10^{-3}$ for Adam, $10^{-2}$ for SGD). If loss diverges, reduce by 10x. If loss barely moves, increase by 2--5x. A learning-rate finder (sweep from $10^{-5}$ to $1$ and plot loss) is a quick diagnostic.
     - Practical tip: combine a good initializer with Adam optimizer and a small learning rate as a safe default; tune from there.
 - No normalization/regularization: weak generalization.
@@ -676,6 +676,26 @@ Rule of thumb: start with ReLU (general deep learning) or GELU (transformer-styl
         - Weight decay / L2 (e.g., $\lambda=10^{-4}$): penalizes large weights; built into most optimizers (`weight_decay` in AdamW).
         - Early stopping: monitor validation loss and stop when it starts increasing.
     - Rule of thumb: start with BatchNorm + Dropout (0.1--0.3) + weight decay ($10^{-4}$). Add or remove based on the train/validation gap.
+
+## Key Takeaways
+
+**Without activation, depth is useless.** Stacking linear layers without nonlinearity collapses to a single linear mapping. The activation function is what gives depth its power: each layer can carve out a new decision boundary that the previous layer could not represent.
+
+**Backpropagation is just the chain rule applied in reverse.** The core object is the vector-Jacobian product (VJP), not the Jacobian itself. You never compute or store the full Jacobian; you multiply each layer's local Jacobian by the upstream gradient vector. This keeps memory and compute at $O(p)$ per layer instead of $O(p^2)$.
+
+**Forward-mode is cheap for one parameter, backward-mode is cheap for one loss.** Forward-mode AD computes the gradient of all outputs with respect to one input in one pass. Backward-mode computes the gradient of one scalar loss with respect to all parameters in one pass. Since training has one loss and millions of parameters, backward-mode wins by a factor of $p$.
+
+**Track tensor shapes religiously.** Most bugs in neural network code are shape mismatches. At every layer boundary, write down the shape: $(B, d_{\text{in}}) \to (B, d_{\text{out}})$. When a shape error occurs, printing the shape of every tensor at the failing line almost always reveals the problem immediately.
+
+**Parallelism strategies solve different bottlenecks.** Data parallelism solves throughput (model fits on one GPU, need more speed). Model/pipeline parallelism solves model size (too large for one GPU). Tensor parallelism solves layer size (individual matrix multiplications too large). FSDP solves memory (shard optimizer state across devices). Real LLM training combines several of these simultaneously.
+
+**Initialization sets the trajectory.** Xavier for sigmoid/tanh, He for ReLU. The goal is always the same: keep each layer's output variance roughly equal to its input variance, so signals neither explode nor vanish across depth. Bad initialization (all zeros, too large) can make training impossible regardless of optimizer choice.
+
+**Tradeoff: model capacity vs generalization.** More layers and wider hidden dimensions increase the function class the MLP can represent, but also increase the risk of overfitting. A model that is too small underfits (cannot capture the pattern); a model that is too large memorizes the training data (low training loss, high validation loss). Regularization (dropout, weight decay, early stopping) shifts the boundary, letting you use larger models without as much overfitting.
+
+**Tradeoff: communication vs memory in distributed training.** Data parallelism replicates the full model on every device (high memory, low communication). FSDP shards the model across devices (low memory, high communication because weights must be gathered before each forward/backward pass). Pipeline parallelism sits in between: each device holds a portion of the model, but idle "bubble" time is the cost. The right choice depends on whether memory or bandwidth is your bottleneck.
+
+**Tradeoff: depth vs width.** A deep, narrow network can represent hierarchical features but is harder to train (vanishing gradients, longer backpropagation chains). A shallow, wide network is easier to optimize but needs exponentially more parameters to represent the same hierarchical functions. In practice, moderate depth (2-4 layers for MLPs) with sufficient width is the sweet spot for most tasks.
 
 ## Mini Checklist
 
