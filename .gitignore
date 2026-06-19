@@ -4,3 +4,6 @@ _site
 .npm-debug.log
 Gemfile.lock
 _draft
+vendor
+.jekyll-cache
+.jekyll-metadata

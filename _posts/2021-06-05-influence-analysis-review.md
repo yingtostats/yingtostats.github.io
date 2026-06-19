@@ -8,7 +8,7 @@ tag:
 - Decision Theory
 projects: true
 blog: true
-published: false
+published: true
 author: YingZhang
 description: A unified view of influence analysis using the Value of Information framework, connecting classical diagnostics, variance-based sensitivity analysis, and high-dimensional influence measures.
 fontsize: 23pt
@@ -32,7 +32,7 @@ Let $\theta$ denote the unknown parameters, $Y$ the observed data, and $\phi$ a 
 
 Given a loss function $L(a, \theta)$ and an action $a$, define:
 
-- $a_Y$: the optimal action given data $Y$ alone.
+- $a_{Y}$: the optimal action given data $Y$ alone.
 - $a_{Y,\phi}$: the optimal action given both $Y$ and $\phi$.
 
 ### Retrospective Value of Information
@@ -43,7 +43,7 @@ $$
 \text{RVOI} = E\{L(a_Y, \theta) - L(a_{Y,\phi}, \theta) \mid \phi, Y\}.
 $$
 
-RVOI answers: "Now that we know $\phi$, how much did it actually help?" It is always non-negative because $a_{Y,\phi}$ optimizes the loss with strictly more information than $a_Y$.
+RVOI answers: "Now that we know $\phi$, how much did it actually help?" It is always non-negative because $a_{Y,\phi}$ optimizes the loss with strictly more information than $a_{Y}$.
 
 ### Prospective Value of Information
 
@@ -85,7 +85,7 @@ $$
 \hat{f}_Y(X) = E[f(X) \mid Y], \quad \hat{f}_{Y,\phi}(X) = E[f(X) \mid Y, \phi].
 $$
 
-By the law of total expectation, $\hat{f}_Y(X) = E[\hat{f}_{Y,\phi}(X) \mid Y]$.
+By the law of total expectation, $\hat{f}_{Y}(X) = E[\hat{f}_{Y,\phi}(X) \mid Y]$.
 
 Under squared loss, RVOI, PVOI, and EVOIR simplify to clean geometric quantities:
 
@@ -128,7 +128,7 @@ $$= (\hat{f}_Y - \hat{f}_{Y,\phi})^\top (\hat{f}_Y - \hat{f}_{Y,\phi}).$$
 
 $$\text{PVOI} = E\{(\hat{f}_Y - \hat{f}_{Y,\phi})^\top (\hat{f}_Y - \hat{f}_{Y,\phi}) \mid Y\}.$$
 
-<p>Since $\hat{f}_Y = E[\hat{f}_{Y,\phi} \mid Y]$, this is the expected squared deviation of $\hat{f}_{Y,\phi}$ from its mean, which is the trace of its covariance:</p>
+<p>Since $\hat{f}_{Y} = E[\hat{f}_{Y,\phi} \mid Y]$, this is the expected squared deviation of $\hat{f}_{Y,\phi}$ from its mean, which is the trace of its covariance:</p>
 
 $$= \text{tr}(E\{(\hat{f}_{Y,\phi} - \hat{f}_Y)(\hat{f}_{Y,\phi} - \hat{f}_Y)^\top \mid Y\}) = \text{tr}(\text{Var}(\hat{f}_{Y,\phi}(X) \mid Y)).$$
 
@@ -149,42 +149,42 @@ $$
 \beta \mid \sigma^2, Y \sim N(\hat{\beta}_Y, \sigma^2 (X^\top X)^{-1}), \quad \sigma^2 \mid Y \sim \chi^{-2}(n-p, S_n^2),
 $$
 
-where $\hat{\beta}_Y = (X^\top X)^{-1} X^\top Y$ and $S_n^2 = (Y - X\hat{\beta}_Y)^\top (Y - X\hat{\beta}_Y) / (n-p)$.
+where $\hat{\beta}_{Y} = (X^\top X)^{-1} X^\top Y$ and $S_{n}^2 = (Y - X\hat{\beta}_{Y})^\top (Y - X\hat{\beta}_{Y}) / (n-p)$.
 
 ### Case A: Learning a Parameter Group
 
-Let $\phi = \beta_g$, a subvector of $\beta$ with $p_2$ components. Partition:
+Let $\phi = \beta_{g}$, a subvector of $\beta$ with $p_{2}$ components. Partition:
 
 $$
 \beta \mid \sigma^2, Y \sim N\left(\begin{pmatrix} \hat{\beta}_{Y,-g} \\ \hat{\beta}_{Y,g} \end{pmatrix}, \sigma^2 \begin{pmatrix} A & B \\ B^\top & C \end{pmatrix}\right).
 $$
 
-The EVOIR for learning $\beta_g$ is:
+The EVOIR for learning $\beta_{g}$ is:
 
 $$
 \text{EVOIR} = \frac{n-p-2}{n-p} \cdot F,
 $$
 
-where $F$ is the classical F-statistic for testing $\beta_g$:
+where $F$ is the classical F-statistic for testing $\beta_{g}$:
 
 $$
 F = \frac{(\hat{\beta}_{Y,g} - \beta_g)^\top C^{-1} (\hat{\beta}_{Y,g} - \beta_g) / p_2}{S_n^2} \sim F_{p_2, n-p}.
 $$
 
-The F-statistic, one of the most widely used quantities in regression, is (up to a known scale factor) the EVOIR for a parameter group under squared loss. Large F means $\beta_g$ was more influential than expected; small F means learning $\beta_g$ changed the predictions less than expected.
+The F-statistic, one of the most widely used quantities in regression, is (up to a known scale factor) the EVOIR for a parameter group under squared loss. Large F means $\beta_{g}$ was more influential than expected; small F means learning $\beta_{g}$ changed the predictions less than expected.
 
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">Derivation: EVOIR equals scaled F-statistic</span></summary>
 
-<p>The conditional distribution of $\beta_{-g}$ given $\beta_g$ is:</p>
+<p>The conditional distribution of $\beta_{-g}$ given $\beta_{g}$ is:</p>
 
 $$\beta_{-g} \mid Y, \beta_g, \sigma^2 \sim N(\hat{\beta}_{Y,-g} + BC^{-1}(\beta_g - \hat{\beta}_{Y,g}),\; \sigma^2(A - BC^{-1}B^\top)).$$
 
-<p>The Bayes estimates are $\hat{\beta}_Y$ (given $Y$ alone) and</p>
+<p>The Bayes estimates are $\hat{\beta}_{Y}$ (given $Y$ alone) and</p>
 
 $$\hat{\beta}_{Y,\beta_g} = \begin{pmatrix} \hat{\beta}_{Y,-g} + BC^{-1}(\beta_g - \hat{\beta}_{Y,g}) \\ \beta_g \end{pmatrix}$$
 
-<p>(given $Y$ and $\beta_g$). Computing RVOI:</p>
+<p>(given $Y$ and $\beta_{g}$). Computing RVOI:</p>
 
 $$\text{RVOI} = (X\hat{\beta}_Y - X\hat{\beta}_{Y,\beta_g})^\top (X\hat{\beta}_Y - X\hat{\beta}_{Y,\beta_g}).$$
 
@@ -192,11 +192,11 @@ $$\text{RVOI} = (X\hat{\beta}_Y - X\hat{\beta}_{Y,\beta_g})^\top (X\hat{\beta}_Y
 
 $$\text{RVOI} = (\hat{\beta}_{Y,g} - \beta_g)^\top C^{-1} (\hat{\beta}_{Y,g} - \beta_g).$$
 
-<p>For PVOI, we take the expectation over $\beta_g \mid Y$:</p>
+<p>For PVOI, we take the expectation over $\beta_{g} \mid Y$:</p>
 
 $$\text{PVOI} = E\{(\hat{\beta}_{Y,g} - \beta_g)^\top C^{-1} (\hat{\beta}_{Y,g} - \beta_g) \mid Y\}.$$
 
-<p>Since $\beta_g \mid \sigma^2, Y \sim N(\hat{\beta}_{Y,g}, \sigma^2 C)$, the quadratic form $(\hat{\beta}_{Y,g} - \beta_g)^\top C^{-1} (\hat{\beta}_{Y,g} - \beta_g) / \sigma^2 \sim \chi^2_{p_2}$ conditional on $\sigma^2$. Taking the double expectation:</p>
+<p>Since $\beta_{g} \mid \sigma^2, Y \sim N(\hat{\beta}_{Y,g}, \sigma^2 C)$, the quadratic form $(\hat{\beta}_{Y,g} - \beta_{g})^\top C^{-1} (\hat{\beta}_{Y,g} - \beta_{g}) / \sigma^2 \sim \chi^2_{p_{2}}$ conditional on $\sigma^2$. Taking the double expectation:</p>
 
 $$\text{PVOI} = E\{E\{(\hat{\beta}_{Y,g} - \beta_g)^\top C^{-1} (\hat{\beta}_{Y,g} - \beta_g) \mid Y, \sigma^2\} \mid Y\} = E\{p_2 \sigma^2 \mid Y\} = p_2 \frac{n-p}{n-p-2} S_n^2.$$
 
@@ -227,13 +227,13 @@ This measures how much new data changes the predictions across all observation p
 
 ### Case C: Influence of a Single Observation (Cook's Distance)
 
-Let $\phi = (x_k, y_k)$, the $k$-th observation. The RVOI for removing observation $k$ measures how much the fitted values change:
+Let $\phi = (x_{k}, y_{k})$, the $k$-th observation. The RVOI for removing observation $k$ measures how much the fitted values change:
 
 $$
 \text{RVOI}_k = (X\hat{\beta}_Y - X\hat{\beta}_{Y}^{(-k)})^\top (X\hat{\beta}_Y - X\hat{\beta}_{Y}^{(-k)}),
 $$
 
-where $\hat{\beta}_Y^{(-k)}$ is the OLS estimate with observation $k$ deleted. Cook's distance is this quantity scaled by the variance:
+where $\hat{\beta}_{Y}^{(-k)}$ is the OLS estimate with observation $k$ deleted. Cook's distance is this quantity scaled by the variance:
 
 $$
 D_k = \frac{(\hat{\beta}_Y - \hat{\beta}_Y^{(-k)})^\top (X^\top X) (\hat{\beta}_Y - \hat{\beta}_Y^{(-k)})}{p \, S_n^2} = \frac{(X\hat{\beta}_Y - X\hat{\beta}_Y^{(-k)})^\top (X\hat{\beta}_Y - X\hat{\beta}_Y^{(-k)})}{p \, S_n^2}.
@@ -245,7 +245,7 @@ $$
 D_k = \frac{\text{RVOI}_k}{p \, S_n^2}.
 $$
 
-The numerator is the realized squared change in predictions (RVOI). The denominator $p \, S_n^2$ is proportional to the expected prediction variance, which plays the same normalizing role as PVOI. Large $D_k$ means observation $k$ had an outsized influence on the fitted values.
+The numerator is the realized squared change in predictions (RVOI). The denominator $p \, S_{n}^2$ is proportional to the expected prediction variance, which plays the same normalizing role as PVOI. Large $D_{k}$ means observation $k$ had an outsized influence on the fitted values.
 
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">Cook's distance closed form and connection to leverage and residuals</span></summary>
@@ -254,22 +254,36 @@ The numerator is the realized squared change in predictions (RVOI). The denomina
 
 $$\hat{\beta}_Y^{(-k)} = \hat{\beta}_Y - \frac{(X^\top X)^{-1} x_k e_k}{1 - h_{kk}},$$
 
-<p>where $e_k = y_k - x_k^\top \hat{\beta}_Y$ is the ordinary residual and $h_{kk} = x_k^\top (X^\top X)^{-1} x_k$ is the leverage (the $k$-th diagonal element of the hat matrix $H = X(X^\top X)^{-1}X^\top$). Substituting into Cook's distance:</p>
+<p>where $e_{k} = y_{k} - x_{k}^\top \hat{\beta}_{Y}$ is the ordinary residual and $h_{kk} = x_{k}^\top (X^\top X)^{-1} x_{k}$ is the leverage (the $k$-th diagonal element of the hat matrix $H = X(X^\top X)^{-1}X^\top$). Substituting into Cook's distance:</p>
 
 $$D_k = \frac{e_k^2}{p \, S_n^2} \cdot \frac{h_{kk}}{(1 - h_{kk})^2}.$$
 
 <p>This reveals that Cook's distance is the product of two factors:</p>
 
 <ul>
-<li><strong>Residual magnitude:</strong> $e_k^2 / (p \, S_n^2)$ measures how poorly the model fits observation $k$. Large residuals indicate the point is an outlier in the $y$-direction.</li>
+<li><strong>Residual magnitude:</strong> $e_{k}^2 / (p \, S_{n}^2)$ measures how poorly the model fits observation $k$. Large residuals indicate the point is an outlier in the $y$-direction.</li>
 <li><strong>Leverage:</strong> $h_{kk} / (1 - h_{kk})^2$ measures how extreme observation $k$'s position is in the feature space. Points far from the center of the data have high leverage and exert more pull on the fitted line.</li>
 </ul>
 
 <p>A point needs both a large residual <em>and</em> high leverage to be truly influential. An outlier in $y$ with low leverage barely moves the fit. A high-leverage point that falls on the regression line has a small residual and low Cook's distance despite its extreme position.</p>
 
-<p><strong>Rule of thumb.</strong> $D_k > 4/n$ or $D_k > 1$ are common thresholds for flagging influential observations, though these are guidelines rather than formal tests.</p>
+<p><strong>Rule of thumb.</strong> $D_{k} > 4/n$ or $D_{k} > 1$ are common thresholds for flagging influential observations, though these are guidelines rather than formal tests.</p>
 
-<p><strong>Connection to EVOIR.</strong> Cook's distance normalizes the RVOI by $p \, S_n^2$ (a variance estimate). Compare with the F-statistic case where EVOIR = $\frac{n-p-2}{n-p} \cdot F$: both are ratios of a realized squared change to a variance scale. Cook's distance is the observation-level analogue of the F-statistic: F measures parameter-group influence, $D_k$ measures observation influence, and both are scaled RVOIs under the VoI framework.</p>
+<p><strong>Connection to EVOIR.</strong> Cook's distance normalizes the RVOI by $p \, S_{n}^2$ (a variance estimate). Compare with the F-statistic case where EVOIR = $\frac{n-p-2}{n-p} \cdot F$: both are ratios of a realized squared change to a variance scale. Cook's distance is the observation-level analogue of the F-statistic: F measures parameter-group influence, $D_{k}$ measures observation influence, and both are scaled RVOIs under the VoI framework.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose the Cook's distance threshold in practice</span></summary>
+
+<p>Two common rules of thumb exist: $D_{k} > 1$ (conservative, flags only extreme cases) and $D_{k} > 4/n$ (liberal, flags roughly the most influential observations in moderate-sized samples). Neither is a formal significance test. Which to use depends on your goal.</p>
+
+<p><strong>Start with $4/n$, then inspect.</strong> The $4/n$ rule corresponds roughly to the 50th percentile of the $F_{p, n-p}$ distribution, so it flags points that shift the fit by more than the "median expected shift." Use it as a screening step, not a deletion criterion. Plot $D_{k}$ against observation index and look for points that separate from the bulk, rather than relying on a fixed cutoff.</p>
+
+<p><strong>Leverage deserves its own check.</strong> Cook's distance conflates leverage ($h_{kk}$) and residual size. A point can have moderate $D_{k}$ because of high leverage with a small residual (it is pulling the line toward itself). Check leverage separately: the standard threshold is $h_{kk} > 2p/n$. In R, <code>hatvalues(model)</code> returns leverages; in Python, <code>OLSResults.get_influence().hat_matrix_diag</code> does the same. Half-normal plots of leverages (R: <code>faraway::halfnorm(hatvalues(model))</code>) are more informative than a fixed cutoff because they reveal the distribution's shape and make outliers visually obvious.</p>
+
+<p><strong>Software.</strong> In R: <code>cooks.distance(model)</code> or <code>plot(model, which=4)</code> for the index plot. In Python: <code>OLSResults.get_influence().cooks_distance</code> returns both $D_{k}$ values and p-values based on the $F_{p, n-p}$ distribution. Always examine flagged points substantively (measurement error, different subpopulation, data entry mistake) before deciding whether to remove, downweight, or keep them.</p>
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
 </details>
@@ -282,9 +296,9 @@ The prospective value of information satisfies four fundamental properties under
 
 **Uniqueness.** Under A2, $\text{PVOI}(I \mid Y) = 0$ if and only if $I$ is empty (contains no information).
 
-**Monotonicity.** If $I_2 \subset I_1$, then $\text{PVOI}(I_2 \mid Y) \leq \text{PVOI}(I_1 \mid Y)$. More information is always at least as valuable.
+**Monotonicity.** If $I_{2} \subset I_{1}$, then $\text{PVOI}(I_{2} \mid Y) \leq \text{PVOI}(I_{1} \mid Y)$. More information is always at least as valuable.
 
-**Additivity.** If $I_2 \subset I_1$ and $I_{1-2} = I_1 \setminus I_2$, then
+**Additivity.** If $I_{2} \subset I_{1}$ and $I_{1-2} = I_{1} \setminus I_{2}$, then
 
 $$
 \text{PVOI}(I_1 \mid Y) = \text{PVOI}(I_2 \mid Y) + E_{I_2 \mid Y}\, \text{PVOI}(I_{1-2} \mid I_2, Y).
@@ -299,17 +313,17 @@ $$
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">Proofs of PVOI properties</span></summary>
 
-<p><strong>Non-negativity.</strong> Since $d_{Y,I}$ is a Bayes estimator, by definition $E_{\theta|Y,I} L(d_{Y,I}, \theta) \leq E_{\theta|Y,I} L(d_Y, \theta)$ for all $I$. Hence</p>
+<p><strong>Non-negativity.</strong> Since $d_{Y,I}$ is a Bayes estimator, by definition $E_{\theta\lvert Y,I} L(d_{Y,I}, \theta) \leq E_{\theta\rvertY,I} L(d_{Y}, \theta)$ for all $I$. Hence</p>
 
 $$\text{PVOI}(I \mid Y) = E_{I|Y}\, E_{\theta|Y,I}\{L(d_Y, \theta) - L(d_{Y,I}, \theta)\} \geq 0.$$
 
-<p><strong>Uniqueness.</strong> If $\text{PVOI}(I \mid Y) = 0$, then by non-negativity, $E_{\theta|Y,I}\{L(d_Y, \theta) - L(d_{Y,I}, \theta)\} = 0$ for almost every $I \mid Y$. By uniqueness of the Bayes estimator (A2), $d_{Y,I} = d_Y$ for almost every $I \mid Y$, which means $I$ provides no information.</p>
+<p><strong>Uniqueness.</strong> If $\text{PVOI}(I \mid Y) = 0$, then by non-negativity, $E_{\theta\lvert Y,I}\{L(d_{Y}, \theta) - L(d_{Y,I}, \theta)\} = 0$ for almost every $I \mid Y$. By uniqueness of the Bayes estimator (A2), $d_{Y,I} = d_{Y}$ for almost every $I \mid Y$, which means $I$ provides no information.</p>
 
-<p><strong>Monotonicity.</strong> For $I_2 \subset I_1$ with $I_{1-2} = I_1 \setminus I_2$:</p>
+<p><strong>Monotonicity.</strong> For $I_{2} \subset I_{1}$ with $I_{1-2} = I_{1} \setminus I_{2}$:</p>
 
 $$\text{PVOI}(I_1|Y) - \text{PVOI}(I_2|Y) = E_{\theta,I_1|Y}\{L(d_{Y,I_2}, \theta) - L(d_{Y,I_1}, \theta)\}.$$
 
-<p>Since $I_2 \subset I_1$, we can write $d_{Y,I_1} = d_{Y,I_2,I_{1-2}}$ and condition on $I_2$:</p>
+<p>Since $I_{2} \subset I_{1}$, we can write $d_{Y,I_{1}} = d_{Y,I_{2},I_{1-2}}$ and condition on $I_{2}$:</p>
 
 $$= E_{I_2|Y}\, E_{\theta,I_{1-2}|Y,I_2}\{L(d_{Y,I_2}, \theta) - L(d_{Y,I_2,I_{1-2}}, \theta)\} = E_{I_2|Y}\, \text{PVOI}(I_{1-2} \mid Y, I_2) \geq 0.$$
 
@@ -317,7 +331,7 @@ $$= E_{I_2|Y}\, E_{\theta,I_{1-2}|Y,I_2}\{L(d_{Y,I_2}, \theta) - L(d_{Y,I_2,I_{1
 
 $$\text{PVOI}(I_1|Y) = \text{PVOI}(I_2|Y) + E_{I_2|Y}\, \text{PVOI}(I_{1-2} \mid I_2, Y).$$
 
-<p>By symmetry (swapping the roles of $I_2$ and $I_{1-2}$), the same argument gives:</p>
+<p>By symmetry (swapping the roles of $I_{2}$ and $I_{1-2}$), the same argument gives:</p>
 
 $$\text{PVOI}(I_1|Y) = \text{PVOI}(I_{1-2}|Y) + E_{I_{1-2}|Y}\, \text{PVOI}(I_2 \mid I_{1-2}, Y).$$
 
@@ -326,7 +340,7 @@ $$\text{PVOI}(I_1|Y) = \text{PVOI}(I_{1-2}|Y) + E_{I_{1-2}|Y}\, \text{PVOI}(I_2 
 
 ### RVOI Additivity
 
-There is a corresponding additivity result for retrospective value. If $I_2 \subset I_1$ and $I_{1-2} = I_1 \setminus I_2$:
+There is a corresponding additivity result for retrospective value. If $I_{2} \subset I_{1}$ and $I_{1-2} = I_{1} \setminus I_{2}$:
 
 $$
 E_{I_{1-2}|Y,I_2}\, \text{RVOI}(I_1 \mid Y, I_1) = \text{RVOI}(I_2 \mid Y, I_2) + \text{PVOI}(I_{1-2} \mid Y, I_2).
@@ -345,7 +359,7 @@ $$E_{I_{1-2}|Y,I_2}\, \text{RVOI}(I_1|Y,I_1) - \text{PVOI}(I_{1-2}|Y,I_2),$$
 
 $$= E_{\theta,I_{1-2}|Y,I_2}\{L(d_Y,\theta) - L(d_{Y,I_1},\theta)\} - E_{\theta,I_{1-2}|Y,I_2}\{L(d_{Y,I_2},\theta) - L(d_{Y,I_2,I_{1-2}},\theta)\}.$$
 
-<p>Since $d_{Y,I_1} = d_{Y,I_2,I_{1-2}}$, the terms involving $d_{Y,I_1}$ cancel:</p>
+<p>Since $d_{Y,I_{1}} = d_{Y,I_{2},I_{1-2}}$, the terms involving $d_{Y,I_{1}}$ cancel:</p>
 
 $$= E_{\theta,I_{1-2}|Y,I_2}\{L(d_Y,\theta) - L(d_{Y,I_2},\theta)\} = E_{\theta|Y,I_2}\{L(d_Y,\theta) - L(d_{Y,I_2},\theta)\} = \text{RVOI}(I_2|Y,I_2).$$
 
@@ -358,7 +372,7 @@ Variance-based sensitivity analysis (Sobol indices) asks: how much of the output
 
 ### Sobol Indices
 
-The first-order variance (main effect) of input $X_i$ is
+The first-order variance (main effect) of input $X_{i}$ is
 
 $$
 V_i = \text{Var}_{X_i}[E_{X_{\sim i}}(y \mid X_i)],
@@ -376,7 +390,7 @@ $$
 S_i = \frac{V_i}{\text{Var}[y]}, \quad S_{T_i} = \frac{V_{T_i}}{\text{Var}[y]}.
 $$
 
-$S_i$ measures the main effect of $X_i$ alone. $S_{T_i}$ measures the total contribution of $X_i$ including all interactions with other variables.
+$S_{i}$ measures the main effect of $X_{i}$ alone. $S_{T_{i}}$ measures the total contribution of $X_{i}$ including all interactions with other variables.
 
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">Foundations: law of total variance and ANOVA-like decomposition</span></summary>
@@ -385,9 +399,9 @@ $S_i$ measures the main effect of $X_i$ alone. $S_{T_i}$ measures the total cont
 
 $$\text{Var}[y] = \text{Var}[E[y \mid X_i]] + E[\text{Var}[y \mid X_i]].$$
 
-<p>The first term is $V_i$ (variance explained by $X_i$); the second is the residual variance.</p>
+<p>The first term is $V_{i}$ (variance explained by $X_{i}$); the second is the residual variance.</p>
 
-<p>The second is the <strong>high-dimensional model representation (HDMR)</strong>: any function $y = \eta(x_1, \ldots, x_n)$ can be decomposed as</p>
+<p>The second is the <strong>high-dimensional model representation (HDMR)</strong>: any function $y = \eta(x_{1}, \ldots, x_{n})$ can be decomposed as</p>
 
 $$y = E[y] + \sum_i z_i(x_i) + \sum_{i < j} z_{ij}(x_i, x_j) + \cdots,$$
 
@@ -395,9 +409,9 @@ $$y = E[y] + \sum_i z_i(x_i) + \sum_{i < j} z_{ij}(x_i, x_j) + \cdots,$$
 
 $$z_i(x_i) = E[y \mid x_i] - E[y], \quad z_{ij}(x_i, x_j) = E[y \mid x_i, x_j] - E[y \mid x_i] - E[y \mid x_j] + E[y].$$
 
-<p>This gives $2^n - 1$ terms, which is why the total-effect index $S_{T_i}$ is useful: it summarizes all interactions involving $X_i$ without enumerating them.</p>
+<p>This gives $2^n - 1$ terms, which is why the total-effect index $S_{T_{i}}$ is useful: it summarizes all interactions involving $X_{i}$ without enumerating them.</p>
 
-<p><strong>Special case.</strong> When $y = a + bx_1 + cx_2$ and $x_1, x_2$ are independent and centered:</p>
+<p><strong>Special case.</strong> When $y = a + bx_{1} + cx_{2}$ and $x_{1}, x_{2}$ are independent and centered:</p>
 
 $$S_i = \frac{b^2 \text{Var}[x_1]}{\text{Var}[y]} = \rho_{y,x_1}^2 = S_{T_i}.$$
 
@@ -422,7 +436,7 @@ $$
 E_{X_{\sim i}}\, \text{PVOI}(X_i \mid X_{\sim i}) = E_{X_{\sim i}}[\text{Var}_{X_i}[d_X \mid X_{\sim i}]] \approx V_{T_i}.
 $$
 
-The first-order Sobol index measures how much learning $X_i$ alone reduces expected loss. The total-effect index measures the average reduction from learning $X_i$ after all other variables are already known. The VoI framework generalizes these beyond squared loss to any loss function, which is useful when the parameter of interest is highly skewed or multimodal.
+The first-order Sobol index measures how much learning $X_{i}$ alone reduces expected loss. The total-effect index measures the average reduction from learning $X_{i}$ after all other variables are already known. The VoI framework generalizes these beyond squared loss to any loss function, which is useful when the parameter of interest is highly skewed or multimodal.
 
 ## Connection 2: Estimation Stability With Cross-Validation (ESCV)
 
@@ -464,6 +478,29 @@ $$E_{(\mathbf{X},\mathbf{y})_{[\lambda]}}\, \text{RVOI} = E_{(\mathbf{X},\mathbf
 
 ESCV selects $\lambda$ by minimizing prediction instability. Viewed through VoI, it chooses the regularization that minimizes the expected influence of any single fold on the predictions. Stable models have low PVOI for each fold; unstable models have high PVOI.
 
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose the regularization parameter with ESCV in practice</span></summary>
+
+<p><strong>When to prefer ESCV over standard CV.</strong> Standard cross-validation (minimizing prediction error) can select models that are accurate on average but unstable: small changes in the training set produce large swings in predictions. ESCV penalizes this instability. Use ESCV when prediction stability matters more than raw predictive accuracy, for example in scientific inference (where you want robust coefficient estimates) or in high-dimensional settings where the CV error curve is flat and multiple $\lambda$ values give similar accuracy.</p>
+
+<p><strong>Number of folds.</strong> ESCV uses the same fold structure as standard $V$-fold CV. $V = 5$ or $V = 10$ are typical defaults. Larger $V$ gives a less biased variance estimate but increases computation. Leave-one-out ($V = n$) is the most stable estimator of ESCV but costs $n$ model fits.</p>
+
+<p><strong>Key difference from standard CV.</strong> In standard CV, each model predicts only its held-out fold, producing a single $n$-vector of out-of-sample predictions. In ESCV, each model predicts <em>all $n$ points</em>. With $V = 5$ folds, you get 5 full $n$-dimensional prediction vectors $\hat{Y}_{[-1,\lambda]}, \dots, \hat{Y}_{[-5,\lambda]}$, and ESCV measures pointwise variance across these 5 vectors. Some predictions are in-sample (the point was in training) and some are out-of-sample (the point was held out), but that is fine because ESCV measures <em>stability</em> (do different training sets give similar predictions?), not prediction accuracy.</p>
+
+<p><strong>Implementation.</strong> ESCV is not built into standard packages, but it is straightforward to compute from any CV loop. Fit the model on each of the $V$ training folds, predict all $n$ points from each model, compute their pointwise variance, and normalize by the squared norm of their mean. In R, <code>cv.glmnet(..., keep=TRUE)$fit.preval</code> stores the full prediction matrix (all $n$ points for each fold's model). In Python, fit each fold's model manually and call <code>predict</code> on the full dataset; <code>sklearn.model_selection.cross_val_predict</code> only returns out-of-fold predictions, so it does not directly give the ESCV prediction matrix. Select the $\lambda$ that minimizes ESCV, or use the "one-standard-error" heuristic applied to the ESCV curve instead of the CV error curve.</p>
+
+<p><strong>Combining stability with accuracy.</strong> Pure ESCV can over-regularize (very stable but poor predictions). Two practical approaches:</p>
+
+<ol>
+<li><strong>ESCV as tiebreaker (recommended).</strong> Find all $\lambda$ within one standard error of the minimum CV error, then among those pick the $\lambda$ with minimum ESCV. This is the stability-aware version of the classic 1-SE rule, requires no extra tuning, and works best when the CV error curve is flat (common in high-dimensional settings) where multiple $\lambda$ values give similar accuracy and stability should decide.</li>
+<li><strong>Combined criterion.</strong> Minimize $\text{CV}_{\text{error}}(\lambda) + \alpha \cdot \text{ESCV}(\lambda)$, where $\alpha$ controls the accuracy-stability tradeoff. Set $\alpha$ by normalizing both terms to the same scale (e.g., divide each by its range across the $\lambda$ grid) and starting with $\alpha = 1$ (equal weight). Increase $\alpha$ when stability matters more (scientific inference, regulatory settings); decrease when prediction accuracy dominates (forecasting, competitions).</li>
+</ol>
+
+<p><strong>ESCV is model-agnostic.</strong> The formula uses only prediction vectors, not model internals. It works for any model with a tuning parameter: LASSO, ridge, random forest, gradient boosting, neural networks. It also doubles as an outlier detector: the per-point contribution $\text{ESCV}_{i} = \frac{1}{V}\sum_{k=1}^V (\hat{f}_{-k}(x_{i}) - \bar{f}(x_{i}))^2$ flags points that drive instability. Points with high $\text{ESCV}_{i}$ are the ones where removing a fold changes the prediction most, which is exactly the PVOI interpretation. This avoids masking because each fold's model excludes that fold's points.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
 ## Connection 3: High-Dimensional Influence Measure
 
 In high-dimensional linear models, the classical influence measure for observation $k$ is
@@ -472,7 +509,7 @@ $$
 D_k = \frac{1}{p} \sum_{j=1}^{p} (\hat{\rho}_j - \hat{\rho}_j^{(k)})^2,
 $$
 
-where $\hat{\rho}_j$ is the marginal correlation between feature $j$ and $y$, and $\hat{\rho}_j^{(k)}$ is the same quantity with observation $k$ removed.
+where $\hat{\rho}_{j}$ is the marginal correlation between feature $j$ and $y$, and $\hat{\rho}_{j}^{(k)}$ is the same quantity with observation $k$ removed.
 
 In the VoI framework, this is exactly an RVOI when the decision is the vector of marginal correlations under squared loss:
 
@@ -486,7 +523,19 @@ $$
 n^2 D_k \to \chi^2(1).
 $$
 
-This provides a formal test: compute $n^2 D_k$ for each observation and obtain a p-value for the hypothesis that observation $k$ is not influential.
+This provides a formal test: compute $n^2 D_{k}$ for each observation and obtain a p-value for the hypothesis that observation $k$ is not influential.
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose the threshold for the high-dimensional influence test in practice</span></summary>
+
+<p><strong>Use the $\chi^2(1)$ p-value with a multiple testing correction.</strong> Compute $n^2 D_{k}$ for each observation and compare to $\chi^2_{1}$ quantiles. With $n$ simultaneous tests, apply a Bonferroni correction (reject if p-value $< \alpha / n$) or, less conservatively, control the false discovery rate with the Benjamini-Hochberg procedure. At $\alpha = 0.05$ with Bonferroni, the effective threshold on $n^2 D_{k}$ is $\chi^2_{1}(1 - 0.05/n)$, which is approximately $(\log n)^2$ for large $n$.</p>
+
+<p><strong>Practical considerations.</strong> The asymptotic $\chi^2(1)$ result requires $\min\{n, p\} \to \infty$ and assumes no truly influential point exists under the null. In finite samples, the approximation can be liberal (too many false positives) when $n/p$ is close to 1. Simulate from the fitted model to calibrate the null distribution if you are in this regime. Compute $D_{k}$ for all observations and plot the sorted $n^2 D_{k}$ values against $\chi^2(1)$ quantiles (a Q-Q plot). Points that deviate sharply from the diagonal are candidate influential observations.</p>
+
+<p><strong>Software.</strong> No standard R or Python package implements this specific test. The computation itself is simple: for each observation $k$, recompute all $p$ marginal correlations $\hat{\rho}_{j}^{(k)}$ by the leave-one-out update formula $\hat{\rho}_{j}^{(k)} = (n \hat{\rho}_{j} - x_{kj} y_{k} / s_{xj} s_{y}) / (n-1)$ (with appropriate rescaling), then sum the squared differences. Vectorized over $k$, this costs $\mathcal{O}(np)$ total, which is feasible even when $p$ is large.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
 
 ## Connection 4: Gradient-Based Influence (Influence Functions and Beyond)
 
@@ -500,7 +549,7 @@ $$
 \text{IF}(z, z_{\text{test}}) = -\nabla_\theta L(z_{\text{test}}, \hat{\theta})^\top H_{\hat{\theta}}^{-1} \nabla_\theta L(z, \hat{\theta}),
 $$
 
-where $\hat{\theta}$ is the trained model parameters, $H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^{n} \nabla_\theta^2 L(z_i, \hat{\theta})$ is the Hessian of the training loss, and $\nabla_\theta L(z, \hat{\theta})$ is the gradient of the loss at point $z$.
+where $\hat{\theta}$ is the trained model parameters, $H_{\hat{\theta}} = \frac{1}{n} \sum_{i=1}^{n} \nabla_\theta^2 L(z_{i}, \hat{\theta})$ is the Hessian of the training loss, and $\nabla_\theta L(z, \hat{\theta})$ is the gradient of the loss at point $z$.
 
 The intuition: $\nabla_\theta L(z, \hat{\theta})$ is the direction each training point pushes the parameters. $H_{\hat{\theta}}^{-1}$ rescales this direction by the local curvature. The dot product with the test gradient measures how much this parameter change affects the test prediction. Large positive IF means removing $z$ would increase the test loss (the training point was helpful); large negative means it would decrease the test loss (the point was harmful).
 
@@ -514,7 +563,7 @@ $$
 
 This is the basis of several feature attribution methods:
 
-- **Saliency maps**: the raw input gradient $\nabla_x L$. Shows which input dimensions the loss is locally sensitive to.
+- **Saliency maps**: the raw input gradient $\nabla_{x} L$. Shows which input dimensions the loss is locally sensitive to.
 - **Integrated gradients**: averages the gradient along a path from a baseline input to the actual input, satisfying a completeness axiom (attributions sum to the prediction difference).
 - **GradientSHAP**: uses gradient information to approximate Shapley values for features, bridging gradient-based and game-theoretic methods.
 
@@ -560,28 +609,28 @@ $$
 
 This averages the marginal contribution of player $i$ over all possible subsets $S$. The combinatorial weighting ensures each subset size is weighted equally. The Shapley value is the unique allocation satisfying four axioms:
 
-- **Efficiency.** $\sum_{i=1}^{n} \phi_i = U(D) - U(\emptyset)$. Total credit equals total utility.
+- **Efficiency.** $\sum_{i=1}^{n} \phi_{i} = U(D) - U(\emptyset)$. Total credit equals total utility.
 - **Symmetry.** Equal contributors receive equal credit.
 - **Null player.** Non-contributors receive zero credit.
-- **Linearity.** For combined utilities $U = U_1 + U_2$, credits add: $\phi_i(U) = \phi_i(U_1) + \phi_i(U_2)$.
+- **Linearity.** For combined utilities $U = U_{1} + U_{2}$, credits add: $\phi_{i}(U) = \phi_{i}(U_{1}) + \phi_{i}(U_{2})$.
 
 ### Data Shapley: Players Are Training Points
 
-In Data Shapley, each player is a training sample $z_i$. The utility $U(S)$ is the model's performance (e.g., validation accuracy) when trained on subset $S$. Data Shapley answers: "How much does each training point contribute to the model's ability to make good predictions?"
+In Data Shapley, each player is a training sample $z_{i}$. The utility $U(S)$ is the model's performance (e.g., validation accuracy) when trained on subset $S$. Data Shapley answers: "How much does each training point contribute to the model's ability to make good predictions?"
 
 Applications include identifying mislabeled data (negative Shapley value), data pricing (compensate data providers proportionally), and data selection (keep only the high-value training points).
 
 ### Feature Shapley (SHAP): Players Are Input Features
 
-In SHAP, each player is an input feature $x_j$. The utility $U(S)$ is the model's prediction when only features in $S$ are observed (features outside $S$ are marginalized out or set to baseline values). Feature Shapley answers: "How much does each feature contribute to this specific prediction?"
+In SHAP, each player is an input feature $x_{j}$. The utility $U(S)$ is the model's prediction when only features in $S$ are observed (features outside $S$ are marginalized out or set to baseline values). Feature Shapley answers: "How much does each feature contribute to this specific prediction?"
 
-SHAP provides local, per-prediction explanations. For a prediction $f(x) = 3.5$, SHAP might say: $x_1$ contributed +1.2, $x_2$ contributed -0.5, $x_3$ contributed +0.3, etc., and these sum to $f(x) - E[f(x)]$ (by the efficiency axiom).
+SHAP provides local, per-prediction explanations. For a prediction $f(x) = 3.5$, SHAP might say: $x_{1}$ contributed +1.2, $x_{2}$ contributed -0.5, $x_{3}$ contributed +0.3, etc., and these sum to $f(x) - E[f(x)]$ (by the efficiency axiom).
 
 ### The Same Formula, Different Games
 
 | | Data Shapley | Feature Shapley (SHAP) |
 |---|---|---|
-| **Players** | Training samples $z_1, \ldots, z_n$ | Input features $x_1, \ldots, x_d$ |
+| **Players** | Training samples $z_{1}, \ldots, z_{n}$ | Input features $x_{1}, \ldots, x_{d}$ |
 | **Utility** | Model performance on validation set | Model prediction $f(x)$ |
 | **Question** | Which training points helped the model? | Which features drove this prediction? |
 | **Scope** | Global (across training process) | Local (per prediction) |
@@ -635,7 +684,7 @@ Each framework has a natural strength. Gradient-based methods are the most pract
 
 <p><strong>Gradient-based and decision-theoretic.</strong> Cook's distance is fundamentally a decision-theoretic quantity: it is the exact RVOI (squared prediction change from removing an observation) under squared loss, computed via the closed-form Sherman-Morrison update of OLS. No gradient approximation is needed. The influence function is a gradient-based method that <em>approximates</em> this same quantity for general models via a first-order Taylor expansion. For linear regression, the approximation happens to be exact because the loss is quadratic (the Taylor expansion has no higher-order terms). So Cook's distance belongs natively to the VoI framework, and the influence function recovers it as a special case only in the linear setting. For non-linear models, RVOI is the exact quantity and the influence function is the practical approximation.</p>
 
-<p><strong>Game-theoretic and decision-theoretic.</strong> The PVOI additivity property ($\text{PVOI}(I_1|Y) = \text{PVOI}(I_2|Y) + E_{I_2|Y}\text{PVOI}(I_{1-2}|I_2,Y)$) mirrors the Shapley value's marginal contribution structure. The Shapley value can be viewed as a specific way of averaging conditional PVOIs across all possible conditioning sets, with combinatorial weights ensuring fairness. Both ask "how much does this information contribute?" but VoI uses a Bayesian criterion while Shapley uses axiomatic game theory.</p>
+<p><strong>Game-theoretic and decision-theoretic.</strong> The PVOI additivity property ($\text{PVOI}(I_{1}\lvert Y) = \text{PVOI}(I_{2}\rvertY) + E_{I_{2}\lvert Y}\text{PVOI}(I_{1-2}\rvertI_{2},Y)$) mirrors the Shapley value's marginal contribution structure. The Shapley value can be viewed as a specific way of averaging conditional PVOIs across all possible conditioning sets, with combinatorial weights ensuring fairness. Both ask "how much does this information contribute?" but VoI uses a Bayesian criterion while Shapley uses axiomatic game theory.</p>
 
 <p><strong>Gradient-based and game-theoretic.</strong> GradientSHAP (a variant of SHAP) uses gradients to approximate Shapley values for features, blending the two traditions. For data influence, influence functions give a local approximation of what Data Shapley measures globally: the effect of a single data point on the model.</p>
 

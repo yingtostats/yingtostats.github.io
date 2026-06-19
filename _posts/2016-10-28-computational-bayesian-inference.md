@@ -100,7 +100,7 @@ $$\pi(\theta)\,K(\theta,\theta') = \pi(\theta')\,K(\theta',\theta).$$
 <p>Let $\mathcal{L}(\theta^{(t)})$ denote the probability distribution of state $\theta^{(t)}$ at iteration $t$.</p>
 
 <ul>
-  <li>Initialize $\theta^{(0)} \sim \mu_0$ (often overdispersed across multiple chains).</li>
+  <li>Initialize $\theta^{(0)} \sim \mu_{0}$ (often overdispersed across multiple chains).</li>
   <li>For $t = 0, 1, 2, \ldots$, draw $\theta^{(t+1)} \sim K(\theta^{(t)}, \cdot)$.</li>
 </ul>
 
@@ -108,7 +108,7 @@ $$\pi(\theta)\,K(\theta,\theta') = \pi(\theta')\,K(\theta',\theta).$$
 
 $$\mathcal{L}_{t+1}(A) = \int K(\theta,A)\,\mathcal{L}_t(\theta)\,d\theta.$$
 
-<p>In operator notation: $\mathcal{L}_{t+1} = \mathcal{L}_t K$, and by induction, $\mathcal{L}_t = \mathcal{L}_0 K^t$.</p>
+<p>In operator notation: $\mathcal{L}_{t+1} = \mathcal{L}_{t} K$, and by induction, $\mathcal{L}_{t} = \mathcal{L}_{0} K^t$.</p>
 
 <hr>
 
@@ -119,7 +119,7 @@ But $K$ could have <em>other</em> fixed points, or the chain might enter periodi
 
 <p>Example: a chain that deterministically alternates between two symmetric modes satisfies invariance but never mixes.</p>
 
-<p>So $\pi K = \pi$ does not by itself tell you that $\mathcal{L}_0 K^t \to \pi$.</p>
+<p>So $\pi K = \pi$ does not by itself tell you that $\mathcal{L}_{0} K^t \to \pi$.</p>
 
 <hr>
 
@@ -133,7 +133,7 @@ But $K$ could have <em>other</em> fixed points, or the chain might enter periodi
   <li><strong>Positive Harris recurrent</strong>: the chain returns to any region of positive measure infinitely often, with finite expected return time.</li>
 </ol>
 
-<p>Under invariance + ergodicity, for <em>any</em> initial distribution $\mu_0$:</p>
+<p>Under invariance + ergodicity, for <em>any</em> initial distribution $\mu_{0}$:</p>
 
 $$\|\mathcal{L}_0 K^t - \pi\|_{\mathrm{TV}} \to 0 \quad \text{as } t \to \infty,$$
 
@@ -186,7 +186,7 @@ There are two common ESS definitions because they come from two different estima
 1. MCMC ESS (autocorrelation-based): for correlated Markov chain draws.
 2. IS ESS (weight-based): for weighted i.i.d. draws from importance sampling.
 
-For an MCMC chain $x_1,\dots,x_S$ and any test function $h(x)$ (e.g., $h(x)=x$ for the mean, $h(x)=x^2$ for the second moment) with lag-$k$ autocorrelation $\rho_k = \mathrm{Corr}(h(x_t), h(x_{t+k}))$,
+For an MCMC chain $x_{1},\dots,x_{S}$ and any test function $h(x)$ (e.g., $h(x)=x$ for the mean, $h(x)=x^2$ for the second moment) with lag-$k$ autocorrelation $\rho_{k} = \mathrm{Corr}(h(x_{t}), h(x_{t+k}))$,
 
 $$
 \mathrm{ESS}_{\mathrm{MCMC}}
@@ -201,9 +201,9 @@ Interpretation: dependence reduces information relative to $S$ i.i.d. samples.
 <summary><span style="color: saddlebrown; font-style: italic;">Where does this formula come from?</span></summary>
 
 
-**Goal.** Estimate $\mu = \mathbb{E}_{\pi}(h(x))$ from a chain $x_1,\dots,x_S$.
+**Goal.** Estimate $\mu = \mathbb{E}_{\pi}(h(x))$ from a chain $x_{1},\dots,x_{S}$.
 
-The natural estimator is the sample mean $\hat\mu = \frac{1}{S}\sum_{s=1}^S h(x_s)$.
+The natural estimator is the sample mean $\hat\mu = \frac{1}{S}\sum_{s=1}^S h(x_{s})$.
 Its variance determines how precise the estimate is.
 
 **i.i.d. baseline.** If draws were independent with $\mathrm{Var}(h(x))=\sigma^2$, then
@@ -212,7 +212,7 @@ $$
 \mathrm{Var}(\hat\mu) = \frac{\sigma^2}{S}.
 $$
 
-**Correlated case.** For a stationary chain, expand $\mathrm{Var}\left(\sum_s h(x_s)\right)$ directly:
+**Correlated case.** For a stationary chain, expand $\mathrm{Var}\left(\sum_{s} h(x_{s})\right)$ directly:
 
 $$
 \mathrm{Var}\left(\sum_{s=1}^S h(x_s)\right)
@@ -248,13 +248,13 @@ $$
 N = \frac{S}{1+2\sum_{k=1}^\infty\rho_k}.
 $$
 
-That $N$ is $\mathrm{ESS}_{\mathrm{MCMC}}$. When $\rho_k>0$ (positive autocorrelation, typical in MCMC), the denominator exceeds 1 and $\mathrm{ESS}<S$.
+That $N$ is $\mathrm{ESS}_{\mathrm{MCMC}}$. When $\rho_{k}>0$ (positive autocorrelation, typical in MCMC), the denominator exceeds 1 and $\mathrm{ESS}<S$.
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
 
 </details>
 
-For importance sampling with normalized weights $\bar{w}_s$,
+For importance sampling with normalized weights $\bar{w}_{s}$,
 
 $$
 \mathrm{ESS}_{\mathrm{IS}} = \frac{1}{\sum_{s=1}^S \bar{w}_s^2},
@@ -329,7 +329,7 @@ Interpretation:
   <li>$B/n$ estimates variance of chain means $\bar\theta_{\cdot j}$, so</li>
 </ul>
 
-Since $\bar\theta_{\cdot j}=\mu+a_j+\bar\varepsilon_{\cdot j}$ and $\operatorname{Var}(\bar\varepsilon_{\cdot j})=\sigma^2/n$, the chain mean has variance $\tau^2+\sigma^2/n$, giving
+Since $\bar\theta_{\cdot j}=\mu+a_{j}+\bar\varepsilon_{\cdot j}$ and $\operatorname{Var}(\bar\varepsilon_{\cdot j})=\sigma^2/n$, the chain mean has variance $\tau^2+\sigma^2/n$, giving
 
 $$
 \frac{B}{n}\approx \tau^2+\frac{\sigma^2}{n}.
@@ -375,7 +375,7 @@ How to use:
 
 #### Monte Carlo Standard Error (MCSE)
 
-MCSE quantifies given the simulation how precisely $\hat\mu_f$ estimates $\mathbb{E}_{\pi}f(\theta).$ 
+MCSE quantifies given the simulation how precisely $\hat\mu_{f}$ estimates $\mathbb{E}_{\pi}f(\theta).$ 
 
 It combines two sources: posterior spread (large $\mathrm{Var}_\pi(f)$ makes any estimate harder to pin down) and simulation efficiency (small ESS inflates error). Concretely,
 
@@ -383,18 +383,18 @@ $$
 \mathrm{MCSE}(\hat\mu_f) \approx \sqrt{\frac{\widehat{\mathrm{Var}}(f)}{\mathrm{ESS}}}.
 $$
 
-Large MCSE means either the posterior variance of $f(\theta)$ is large, or ESS is small (chain is inefficient). Small MCSE means the simulation has enough effective draws to estimate $\hat\mu_f$ reliably.
+Large MCSE means either the posterior variance of $f(\theta)$ is large, or ESS is small (chain is inefficient). Small MCSE means the simulation has enough effective draws to estimate $\hat\mu_{f}$ reliably.
 
-**Why ESS appears here.** For i.i.d. draws, $\mathrm{MCSE} = \sigma_f/\sqrt{S}$. For a correlated chain, autocorrelation reduces the effective information to $\mathrm{ESS} \leq S$, so replace $S$ with $\mathrm{ESS}$.
+**Why ESS appears here.** For i.i.d. draws, $\mathrm{MCSE} = \sigma_{f}/\sqrt{S}$. For a correlated chain, autocorrelation reduces the effective information to $\mathrm{ESS} \leq S$, so replace $S$ with $\mathrm{ESS}$.
 
 Practical estimation:
 
-1. Compute $\widehat{\mathrm{Var}}(f) = \frac{1}{S-1}\sum_{s=1}^S\bigl(f(\theta^{(s)})-\hat\mu_f\bigr)^2$.
-2. Compute $\widehat{\mathrm{ESS}}$ from estimated lag autocorrelations $\hat\rho_k$ of $f(\theta^{(1)}),\dots,f(\theta^{(S)})$:
+1. Compute $\widehat{\mathrm{Var}}(f) = \frac{1}{S-1}\sum_{s=1}^S\bigl(f(\theta^{(s)})-\hat\mu_{f}\bigr)^2$.
+2. Compute $\widehat{\mathrm{ESS}}$ from estimated lag autocorrelations $\hat\rho_{k}$ of $f(\theta^{(1)}),\dots,f(\theta^{(S)})$:
 $$
 \widehat{\mathrm{ESS}} = \frac{S}{1 + 2\sum_{k=1}^{K}\hat\rho_k},
 $$
-where the sum is truncated at the first $K$ such that $\hat\rho_K$ drops below a noise threshold.
+where the sum is truncated at the first $K$ such that $\hat\rho_{K}$ drops below a noise threshold.
 3. Plug into $\mathrm{MCSE} \approx \sqrt{\widehat{\mathrm{Var}}(f)/\widehat{\mathrm{ESS}}}$.
 4. **Reporting rule**: MCSE should be small relative to posterior SD $\sqrt{\widehat{\mathrm{Var}}(f)}$, or relative to decision-relevant effect sizes.
 
@@ -426,7 +426,7 @@ $$
 \hat\rho_k = 1 - \frac{\hat\gamma_k}{2\hat{V}},
 $$
 
-<p>where $\hat{V} = \frac{n-1}{n}W + \frac{1}{n}B$ is the pooled variance estimator from $\hat{R}$ (using the $2m$ half-chains). Pooling across half-chains gives more stable $\hat\rho_k$ estimates than using a single chain.</p>
+<p>where $\hat{V} = \frac{n-1}{n}W + \frac{1}{n}B$ is the pooled variance estimator from $\hat{R}$ (using the $2m$ half-chains). Pooling across half-chains gives more stable $\hat\rho_{k}$ estimates than using a single chain.</p>
 
 <p><strong>Step 4: Bulk-ESS.</strong> Plug into the standard formula with total draws $N = mS$:</p>
 
@@ -541,7 +541,7 @@ Practical diagnostic guide:
 	<summary><span style="color: saddlebrown; font-style: italic;">Why does Gibbs sampling target the correct distribution?</span></summary>
 
 
-Let $\theta=(\theta_1,\dots,\theta_d)$ and suppose each update samples the exact full conditional.
+Let $\theta=(\theta_{1},\dots,\theta_{d})$ and suppose each update samples the exact full conditional.
 Each coordinate update leaves $\pi(\theta)$ invariant:
 
 $$
@@ -646,7 +646,7 @@ $$
 \hat{\mu}_f = \frac{1}{S}\sum_{s=1}^S f\big(\theta^{(s)}\big) \approx \mathbb{E}_{\pi}(f(\theta))
 $$
 
-Note: $\widehat{\mathrm{Var}}(f) = \frac{1}{S-1}\sum_s(f(\theta^{(s)})-\hat\mu_f)^2$ estimates the posterior variance $\mathrm{Var}_{\pi}(f(\theta))$, i.e., how spread out $f(\theta)$ is under the posterior, not the estimation error of $\hat\mu_f$ itself.
+Note: $\widehat{\mathrm{Var}}(f) = \frac{1}{S-1}\sum_{s}(f(\theta^{(s)})-\hat\mu_{f})^2$ estimates the posterior variance $\mathrm{Var}_{\pi}(f(\theta))$, i.e., how spread out $f(\theta)$ is under the posterior, not the estimation error of $\hat\mu_{f}$ itself.
 With MCMC samples, draws are correlated, so precision depends on effective sample size (ESS), not only raw sample size.
 
 * Pros: conceptually simple because posterior expectations reduce to empirical averages of transformed draws; applies to almost any $f$.
@@ -694,7 +694,7 @@ $$
 Practical diagnostic guide:
 
 1. Weight histogram / log-weight spread: extreme right tails indicate unstable estimators.
-2. Maximum normalized weight $\max_s \bar{w}_s$: large values mean one or few points dominate.
+2. Maximum normalized weight $\max_{s} \bar{w}_{s}$: large values mean one or few points dominate.
 3. $\mathrm{ESS}_{\mathrm{IS}}$: if very small relative to $S$, improve proposal or use tempering/bridging.
 4. Support check: verify $q(\theta)>0$ wherever target has mass; support mismatch invalidates IS.
 
@@ -712,7 +712,7 @@ $$
 \frac{\int f(\theta)\frac{\tilde{\pi}(\theta)}{q(\theta)}q(\theta)d\theta}{\int \frac{\tilde{\pi}(\theta)}{q(\theta)}q(\theta)d\theta}.
 $$
 
-So with $\theta^{(s)}\sim q$ and $w_s=\tilde{\pi}(\theta^{(s)})/q(\theta^{(s)})$, the self-normalized estimator is the Monte Carlo plug-in for numerator and denominator.
+So with $\theta^{(s)}\sim q$ and $w_{s}=\tilde{\pi}(\theta^{(s)})/q(\theta^{(s)})$, the self-normalized estimator is the Monte Carlo plug-in for numerator and denominator.
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
 
@@ -767,7 +767,7 @@ $$
 $$
 
 Since KL is nonnegative, maximizing ELBO is equivalent to minimizing
-$\mathrm{KL}\big(q_\lambda(\theta)\,\|\,p(\theta\mid y)\big)$.
+$\mathrm{KL}\big(q_\lambda(\theta)\,\lVert \,p(\theta\mid y)\big)$.
 
 * Pros: fast and scalable because optimization is typically cheaper than long-run simulation.
 * Cons: approximation bias can be substantial because restricted variational families may not capture dependence, skewness, or multimodality; uncertainty is often underestimated.
@@ -859,9 +859,9 @@ $$
 <p>Consider a classic example: tumor incidence in rat studies (Tarone, 1982).</p>
 
 <ul>
-  <li>Let $y_i$ be the number of rats with tumor in group $i$.</li>
-  <li>Let $n_i$ be the total rats in group $i$.</li>
-  <li>We observe rates $y_i/n_i$ across many groups.</li>
+  <li>Let $y_{i}$ be the number of rats with tumor in group $i$.</li>
+  <li>Let $n_{i}$ be the total rats in group $i$.</li>
+  <li>We observe rates $y_{i}/n_{i}$ across many groups.</li>
 </ul>
 
 <p>The key question is how to set the prior hyperparameters in a principled way.</p>
@@ -869,7 +869,7 @@ $$
 <p><strong>Model Initialization</strong></p>
 
 <ul>
-  <li>Let $\theta_i$ be the tumor probability for group $i$.</li>
+  <li>Let $\theta_{i}$ be the tumor probability for group $i$.</li>
   <li>Sampling model:</li>
 </ul>
 

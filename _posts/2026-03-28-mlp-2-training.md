@@ -56,16 +56,16 @@ $$
 z_1 = xW_1 + b_1, \quad h = \phi(z_1), \quad \hat{y} = hW_2 + b_2, \quad \mathcal{L} = \tfrac{1}{2}\|\hat{y} - y\|^2.
 $$
 
-The forward pass stores intermediate values $z_1$, $h$, and $\hat{y}$. The backward pass then uses the chain rule in reverse order to compute gradients for each parameter.
+The forward pass stores intermediate values $z_{1}$, $h$, and $\hat{y}$. The backward pass then uses the chain rule in reverse order to compute gradients for each parameter.
 
 #### Forward Pass
 
 Starting from input $x \in \mathbb{R}^{1 \times d_{in}}$:
 
-1. Pre-activation: $z_1 = xW_1 + b_1 \in \mathbb{R}^{1 \times d_h}$.
-2. Activation: $h = \phi(z_1) \in \mathbb{R}^{1 \times d_h}$.
-3. Output: $\hat{y} = hW_2 + b_2 \in \mathbb{R}^{1 \times d_{out}}$.
-4. Loss: $\mathcal{L} = \tfrac{1}{2}\|\hat{y} - y\|^2$.
+1. Pre-activation: $z_{1} = xW_{1} + b_{1} \in \mathbb{R}^{1 \times d_{h}}$.
+2. Activation: $h = \phi(z_{1}) \in \mathbb{R}^{1 \times d_{h}}$.
+3. Output: $\hat{y} = hW_{2} + b_{2} \in \mathbb{R}^{1 \times d_{out}}$.
+4. Loss: $\mathcal{L} = \tfrac{1}{2}\lVert \hat{y} - y\rVert^2$.
 
 #### Backward Pass
 
@@ -95,7 +95,7 @@ $$
 \frac{\partial \mathcal{L}}{\partial z_1} = \frac{\partial \mathcal{L}}{\partial h} \odot \phi'(z_1),
 $$
 
-where $\odot$ denotes element-wise multiplication and $\phi'(z_1)$ is the derivative of the activation evaluated at the pre-activation values. For ReLU, $\phi'(z) = \mathbf{1}[z > 0]$, so each element is either 0 or 1.
+where $\odot$ denotes element-wise multiplication and $\phi'(z_{1})$ is the derivative of the activation evaluated at the pre-activation values. For ReLU, $\phi'(z) = \mathbf{1}[z > 0]$, so each element is either 0 or 1.
 
 **Step 5.** Gradients for the first-layer parameters:
 
@@ -173,41 +173,41 @@ $$
 E \in \mathbb{R}^{K \times d_e},
 $$
 
-where $d_e$ is the embedding dimension. Looking up category $i$ returns the $i$-th row $E_i \in \mathbb{R}^{d_e}$.
+where $d_{e}$ is the embedding dimension. Looking up category $i$ returns the $i$-th row $E_{i} \in \mathbb{R}^{d_{e}}$.
 
 So instead of feeding a huge one-hot vector, we feed a learned dense representation. Categories that play similar roles in the task can end up with similar embeddings.
 
 ### One-Hot Versus Embedding Dimension
 
-With one-hot encoding, the input dimension for a feature with $K$ categories is $K$ (or $K-1$ if one column is dropped to avoid multicollinearity in linear models; in neural networks all $K$ columns are typically kept). With an embedding layer, the input dimension reduces to $d_e$.
+With one-hot encoding, the input dimension for a feature with $K$ categories is $K$ (or $K-1$ if one column is dropped to avoid multicollinearity in linear models; in neural networks all $K$ columns are typically kept). With an embedding layer, the input dimension reduces to $d_{e}$.
 
-In practice $d_e \ll K$. The purpose of the embedding is to compress a high-dimensional sparse representation into a low-dimensional dense one. Common heuristics for choosing $d_e$:
+In practice $d_{e} \ll K$. The purpose of the embedding is to compress a high-dimensional sparse representation into a low-dimensional dense one. Common heuristics for choosing $d_{e}$:
 
-- $d_e = \min(50,\; \lceil (K+1)/2 \rceil)$ (fast.ai default for tabular models),
-- $d_e = \lceil K^{1/4} \rceil$ (Google recommendation),
+- $d_{e} = \min(50,\; \lceil (K+1)/2 \rceil)$ (fast.ai default for tabular models),
+- $d_{e} = \lceil K^{1/4} \rceil$ (Google recommendation),
 - start with a modest value like 8, 16, or 32 and tune.
 
-For example, a feature with $K = 10{,}000$ categories would need a 10,000-dimensional one-hot vector, but an embedding dimension of $d_e = 10$ to $50$ is usually sufficient.
+For example, a feature with $K = 10{,}000$ categories would need a 10,000-dimensional one-hot vector, but an embedding dimension of $d_{e} = 10$ to $50$ is usually sufficient.
 
-When $K$ is small (say 3 or 4), one-hot encoding already works well and an embedding layer adds unnecessary complexity. Setting $d_e > K$ is rare and seldom helpful.
+When $K$ is small (say 3 or 4), one-hot encoding already works well and an embedding layer adds unnecessary complexity. Setting $d_{e} > K$ is rare and seldom helpful.
 
 ### Embedding As A Linear Projection Without Bias
 
 An embedding lookup is mathematically identical to multiplying a one-hot vector by a weight matrix with no bias term.
 
-Write the one-hot vector for category $i$ as $\mathbf{x}_i \in \mathbb{R}^K$, which has a 1 at position $i$ and 0 elsewhere. A linear layer without bias computes
+Write the one-hot vector for category $i$ as $\mathbf{x}_{i} \in \mathbb{R}^K$, which has a 1 at position $i$ and 0 elsewhere. A linear layer without bias computes
 
 $$
 \mathbf{h} = E^\top \mathbf{x}_i,
 $$
 
-where $E \in \mathbb{R}^{K \times d_e}$. Because $\mathbf{x}_i$ is one-hot, the matrix-vector product selects exactly the $i$-th row of $E$:
+where $E \in \mathbb{R}^{K \times d_{e}}$. Because $\mathbf{x}_{i}$ is one-hot, the matrix-vector product selects exactly the $i$-th row of $E$:
 
 $$
 E^\top \mathbf{x}_i = E_i \in \mathbb{R}^{d_e}.
 $$
 
-This is the same result as looking up row $i$ in the embedding table. The two operations produce identical outputs and learn identical parameters. The only difference is computational: an index lookup is $O(d_e)$, while a full matrix multiply is $O(K \times d_e)$. When $K$ is large, the lookup avoids the cost of multiplying by all the zeros in the one-hot vector.
+This is the same result as looking up row $i$ in the embedding table. The two operations produce identical outputs and learn identical parameters. The only difference is computational: an index lookup is $O(d_{e})$, while a full matrix multiply is $O(K \times d_{e})$. When $K$ is large, the lookup avoids the cost of multiplying by all the zeros in the one-hot vector.
 
 No bias is needed because the one-hot vector already selects a unique row. A bias term would add the same vector to every category and could be absorbed into the embedding rows themselves, so it provides no additional expressive power.
 
@@ -219,7 +219,7 @@ Examples:
 
 For LLMs, the embedding dimension equals the model's hidden size $d_{model}$, which is determined by the overall parameter budget rather than the tabular heuristics above. The following table shows how vocab size, embedding dimension, and depth scale across real models:
 
-| Model | Params | Vocab ($K$) | Embed dim ($d_e$) | Layers | $K / d_e$ |
+| Model | Params | Vocab ($K$) | Embed dim ($d_{e}$) | Layers | $K / d_{e}$ |
 |---|---|---|---|---|---|
 | Qwen3-0.6B | 0.6B | 151,936 | 1,024 | 28 | ~148x |
 | Qwen3-1.7B | 1.7B | 151,936 | 2,048 | 28 | ~74x |
@@ -229,7 +229,7 @@ For LLMs, the embedding dimension equals the model's hidden size $d_{model}$, wh
 | GPT-3 | 175B | 50,257 | 12,288 | 96 | ~4x |
 | Mistral 7B | 7B | 32,000 | 4,096 | 32 | ~8x |
 
-All entries satisfy $d_e \ll K$, so embeddings are always a dimension reduction. Embedding dimension scales with model size, not vocab size: Qwen3-0.6B and Qwen3-32B share the same 152K vocab but use $d_e$ of 1,024 and 5,120 respectively.
+All entries satisfy $d_{e} \ll K$, so embeddings are always a dimension reduction. Embedding dimension scales with model size, not vocab size: Qwen3-0.6B and Qwen3-32B share the same 152K vocab but use $d_{e}$ of 1,024 and 5,120 respectively.
 
 Practical guidance:
 
@@ -267,7 +267,7 @@ $$
 y_j = \sum_{i=1}^{d_{in}} W_{ji}\, x_i.
 $$
 
-If the $W_{ji}$ and $x_i$ are independent and zero-mean, then
+If the $W_{ji}$ and $x_{i}$ are independent and zero-mean, then
 
 $$
 \mathrm{Var}(y_j) = d_{in} \cdot \mathrm{Var}(W) \cdot \mathrm{Var}(x).
@@ -333,13 +333,13 @@ $$
 x_1 = f_1(x_0) + x_0, \quad x_2 = f_2(x_1) + x_1, \quad \dots, \quad x_L = f_L(x_{L-1}) + x_{L-1}.
 $$
 
-The gradient of the loss with respect to an early layer $x_l$ is
+The gradient of the loss with respect to an early layer $x_{l}$ is
 
 $$
 \frac{\partial \mathcal{L}}{\partial x_l} = \frac{\partial \mathcal{L}}{\partial x_L} \cdot \prod_{k=l+1}^{L} \left(I + \frac{\partial f_k}{\partial x_{k-1}}\right).
 $$
 
-Each factor in this product is $I + \frac{\partial f_k}{\partial x_{k-1}}$ rather than just $\frac{\partial f_k}{\partial x_{k-1}}$. The identity matrix $I$ provides a direct path for the gradient to flow unchanged. Even if $\frac{\partial f_k}{\partial x_{k-1}}$ is small, the gradient does not vanish because the $I$ term always passes it through. Without the skip connection, the product would be $\prod_k \frac{\partial f_k}{\partial x_{k-1}}$, which shrinks exponentially when each factor has norm less than 1.
+Each factor in this product is $I + \frac{\partial f_{k}}{\partial x_{k-1}}$ rather than just $\frac{\partial f_{k}}{\partial x_{k-1}}$. The identity matrix $I$ provides a direct path for the gradient to flow unchanged. Even if $\frac{\partial f_{k}}{\partial x_{k-1}}$ is small, the gradient does not vanish because the $I$ term always passes it through. Without the skip connection, the product would be $\prod_{k} \frac{\partial f_{k}}{\partial x_{k-1}}$, which shrinks exponentially when each factor has norm less than 1.
 
 **Why this helps optimization.** At initialization, if the weights are small, $f(x) \approx 0$ and each residual block approximates the identity $y \approx x$. The network starts close to a simple pass-through, and training gradually adds complexity by learning non-zero residuals. This gives the optimizer a much easier starting point compared to a plain deep network where every layer must simultaneously learn a useful transformation.
 
@@ -357,13 +357,13 @@ Learning rate is usually the most sensitive hyperparameter.
 
 A learning rate schedule changes $\eta$ over the course of training. The basic intuition: early in training, parameters are far from a good solution, so larger steps are helpful. Later, the optimizer is near a minimum and large steps overshoot, so a smaller rate gives finer convergence.
 
-**Warmup.** Training starts with $\eta = 0$ (or very small) and linearly increases to the target learning rate $\eta_{\max}$ over a warmup period of $T_w$ steps:
+**Warmup.** Training starts with $\eta = 0$ (or very small) and linearly increases to the target learning rate $\eta_{\max}$ over a warmup period of $T_{w}$ steps:
 
 $$
 \eta_t = \eta_{\max} \cdot \frac{t}{T_w}, \quad t \leq T_w.
 $$
 
-Warmup helps because at initialization the model's activations, gradients, and optimizer statistics (e.g. Adam's running mean and variance estimates) are all unreliable. A large learning rate applied to noisy early gradients can push parameters into a bad region that is hard to recover from. Warmup gives the optimizer time to calibrate before taking full-sized steps. It is especially important for transformers and large models. A typical warmup length is 1--5% of total training steps.
+Warmup helps because at initialization the model's activations, gradients, and optimizer statistics (e.g. Adam's running mean and variance estimates) are all unreliable. A large learning rate applied to noisy early gradients can push parameters into a bad region that is hard to recover from. Warmup gives the optimizer time to calibrate before taking full-sized steps. It is especially important for transformers and large models. A typical warmup length is 1–5% of total training steps.
 
 **Constant schedule.** After warmup (or from the start), $\eta$ stays fixed. Simple, but usually suboptimal because the same step size that works early is too large late in training.
 
@@ -391,10 +391,10 @@ $$
 
 Simpler than cosine and sometimes used for fine-tuning (e.g. BERT fine-tuning often uses linear decay with warmup).
 
-**Warmup + cosine decay (the standard LLM recipe).** Combine warmup for the first $T_w$ steps with cosine decay for the remaining $T - T_w$ steps. In practice this looks like:
+**Warmup + cosine decay (the standard LLM recipe).** Combine warmup for the first $T_{w}$ steps with cosine decay for the remaining $T - T_{w}$ steps. In practice this looks like:
 
-1. Steps $0$ to $T_w$: linear increase from 0 to $\eta_{\max}$.
-2. Steps $T_w$ to $T$: cosine decay from $\eta_{\max}$ to $\eta_{\min}$.
+1. Steps $0$ to $T_{w}$: linear increase from 0 to $\eta_{\max}$.
+2. Steps $T_{w}$ to $T$: cosine decay from $\eta_{\max}$ to $\eta_{\min}$.
 
 Most modern training frameworks (PyTorch, Hugging Face Transformers) have built-in schedulers for all of these. In PyTorch: `torch.optim.lr_scheduler.CosineAnnealingLR` for cosine decay, `torch.optim.lr_scheduler.StepLR` for step decay, and `get_cosine_schedule_with_warmup` in Hugging Face for warmup + cosine.
 
@@ -413,7 +413,7 @@ $$
 g \leftarrow g \cdot \min\left(1, \frac{c}{\|g\|}\right),
 $$
 
-where $g$ is the full gradient vector (concatenation of all parameter gradients) and $c$ is the clipping threshold. When $\|g\| \leq c$, the factor equals 1 and the gradient is unchanged. When $\|g\| > c$, the entire vector is scaled down so that its norm becomes exactly $c$. Because the operation is a scalar multiplication, the gradient direction is preserved. Only the magnitude is capped.
+where $g$ is the full gradient vector (concatenation of all parameter gradients) and $c$ is the clipping threshold. When $\lVert g\rVert \leq c$, the factor equals 1 and the gradient is unchanged. When $\lVert g\rVert > c$, the entire vector is scaled down so that its norm becomes exactly $c$. Because the operation is a scalar multiplication, the gradient direction is preserved. Only the magnitude is capped.
 
 This is different from element-wise clipping, which clamps each component independently to $[-c, c]$ and can change the gradient direction.
 
@@ -423,7 +423,7 @@ Choosing $c$:
 
 - $c = 1.0$ is the most common default. GPT-2, GPT-3, and many transformer training recipes use this value.
 - Start with $c = 1.0$. If training is still unstable, try lowering to 0.5 or 0.25. If clipping activates on nearly every step, $c$ may be too small and the effective learning rate is reduced.
-- A useful diagnostic is to log the unclipped gradient norm during training. If the norm is usually around 0.5 but occasionally spikes to 50, then $c = 1.0$ will catch the spikes without affecting normal steps. Also log the fraction of steps where clipping activates. If clipping triggers on less than 1--5% of steps, $c$ is doing its job as a safety net. If it triggers on most steps, the threshold is too aggressive and effectively shrinking the learning rate every update.
+- A useful diagnostic is to log the unclipped gradient norm during training. If the norm is usually around 0.5 but occasionally spikes to 50, then $c = 1.0$ will catch the spikes without affecting normal steps. Also log the fraction of steps where clipping activates. If clipping triggers on less than 1–5% of steps, $c$ is doing its job as a safety net. If it triggers on most steps, the threshold is too aggressive and effectively shrinking the learning rate every update.
 - Gradient clipping interacts with learning rate: clipping with a large $c$ and a small learning rate can have the same effect as a smaller $c$ with a larger learning rate. Tune them together.
 
 ### Watch Out For Data Problems
@@ -447,7 +447,7 @@ Plot training loss and validation loss over epochs. The shape of these two curve
 - **Training loss decreasing, validation loss flat or increasing.** This is overfitting. The model is memorizing training data instead of learning general patterns. Try stronger regularization (increase dropout, add weight decay, reduce model size), more training data, or early stopping at the epoch where validation loss was lowest.
 - **Both losses high and barely decreasing.** This is underfitting. The model does not have enough capacity or the learning rate is too low. Try increasing model size (more layers or larger hidden dimension), increasing learning rate, training for more epochs, or checking that the input features actually contain signal for the target.
 - **Both losses decreasing but a large gap between them.** Mild overfitting. The model is learning but generalizing poorly. Regularization or more data usually helps.
-- **Training loss oscillates wildly.** Learning rate is likely too large. Reduce it by 2--10x. If using SGD, switching to Adam can also stabilize updates because Adam normalizes by the running variance of each gradient coordinate.
+- **Training loss oscillates wildly.** Learning rate is likely too large. Reduce it by 2–10x. If using SGD, switching to Adam can also stabilize updates because Adam normalizes by the running variance of each gradient coordinate.
 - **Training loss plateaus early at a high value.** Check that the loss function matches the task (cross-entropy for classification, MSE for regression). 
 
 #### Gradient Norms
@@ -466,7 +466,7 @@ Log the global gradient norm (the norm of all parameter gradients concatenated) 
 
 #### Model Outputs On Fixed Examples
 
-Pick a small set of examples (5--10) and log the model's predictions on them periodically during training. This is more interpretable than aggregate loss because you can see whether predictions are moving in the right direction, stuck at a constant, or oscillating.
+Pick a small set of examples (5–10) and log the model's predictions on them periodically during training. This is more interpretable than aggregate loss because you can see whether predictions are moving in the right direction, stuck at a constant, or oscillating.
 
 For classification, check whether predicted probabilities are always near uniform (model has not learned anything) or always near 0/1 from the start (likely a data leak or label encoding bug).
 
@@ -725,11 +725,11 @@ Most MLP operations use 2D tensors where axis 0 is the batch and axis 1 is the f
 | Tensor | Shape | Meaning |
 |---|---|---|
 | Input features | $(N, d_{in})$ | $N$ samples, each with $d_{in}$ features |
-| Weight matrix | $(d_{in}, d_h)$ | maps $d_{in}$ inputs to $d_h$ hidden units |
-| Hidden activations | $(N, d_h)$ | one $d_h$-dim vector per sample |
+| Weight matrix | $(d_{in}, d_{h})$ | maps $d_{in}$ inputs to $d_{h}$ hidden units |
+| Hidden activations | $(N, d_{h})$ | one $d_{h}$-dim vector per sample |
 | Output logits | $(N, C)$ | one score per class, per sample |
 
-Matrix multiply contracts the shared axis: $(N, d_{in}) \times (d_{in}, d_h) \to (N, d_h)$.
+Matrix multiply contracts the shared axis: $(N, d_{in}) \times (d_{in}, d_{h}) \to (N, d_{h})$.
 
 ### 3D Tensors (Sequences, Text)
 
@@ -738,7 +738,7 @@ Sequence models add a length axis. A batch of sentences becomes $(N, T, d)$: bat
 | Tensor | Shape | Meaning |
 |---|---|---|
 | Token IDs | $(N, T)$ | $N$ sequences, each $T$ tokens, integer indices |
-| Token embeddings | $(N, T, d_e)$ | each token ID looked up in the embedding table |
+| Token embeddings | $(N, T, d_{e})$ | each token ID looked up in the embedding table |
 | Attention output | $(N, T, d_{model})$ | one vector per token position |
 
 Operations that act per-token (e.g. the FFN inside a transformer) treat the $(N, T)$ axes as a flat batch and operate on the last axis. A linear layer with weight $(d_{model}, d_{ffn})$ applied to a $(N, T, d_{model})$ tensor produces $(N, T, d_{ffn})$. PyTorch broadcasts the matrix multiply over all leading dimensions automatically.
@@ -754,7 +754,7 @@ Image data uses 4 axes: $(N, C, H, W)$, where $C$ is channels (e.g. 3 for RGB), 
 | After global average pool | $(N, 64)$ | one 64-dim vector per image |
 | After final linear | $(N, C)$ | class logits |
 
-A convolution kernel has shape $(C_{out}, C_{in}, k_H, k_W)$. It slides over the $(H, W)$ spatial dimensions, contracts over $C_{in}$, and produces $C_{out}$ output channels. Pooling layers reduce $H$ and $W$. Global average pooling collapses both spatial axes entirely, producing a 2D tensor $(N, C_{out})$ that can be fed into a standard linear layer.
+A convolution kernel has shape $(C_{out}, C_{in}, k_{H}, k_{W})$. It slides over the $(H, W)$ spatial dimensions, contracts over $C_{in}$, and produces $C_{out}$ output channels. Pooling layers reduce $H$ and $W$. Global average pooling collapses both spatial axes entirely, producing a 2D tensor $(N, C_{out})$ that can be fed into a standard linear layer.
 
 ### 5D Tensors (Video)
 

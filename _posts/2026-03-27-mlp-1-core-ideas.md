@@ -70,7 +70,7 @@ H = \phi(XW_1 + b_1), \quad
 \mathcal{L} = \mathcal{L}(\hat{Y}, Y)
 $$
 
-the forward pass stores intermediate quantities such as $XW_1 + b_1$, $H$, and $\hat{Y}$. Then backpropagation applies the chain rule in reverse order.
+the forward pass stores intermediate quantities such as $XW_{1} + b_{1}$, $H$, and $\hat{Y}$. Then backpropagation applies the chain rule in reverse order.
 
 ### The Core Object: Vector-Jacobian Product
 
@@ -235,7 +235,7 @@ So the main idea is not that training avoids differentiation in the forward dire
 If a batch has $N$ samples and feature size $d$:
 
 - input: $X \in \mathbb{R}^{N \times d_{in}}$
-- hidden: $H \in \mathbb{R}^{N \times d_h}$
+- hidden: $H \in \mathbb{R}^{N \times d_{h}}$
 - output: $Y \in \mathbb{R}^{N \times d_{out}}$
 
 A two-layer MLP is:
@@ -245,10 +245,26 @@ H = \text{ReLU}(XW_1 + b_1), \quad
 Y = HW_2 + b_2
 $$
 
-- First-layer effective parameter dimension: $W_1 \in \mathbb{R}^{d_{in} \times d_h},$ and $b_1 \in \mathbb{R}^{d_h}$ broadcast over batch $N$, so output of hidden layer is $H \in \mathbb{R}^{N \times d_h}.$
-- Second-layer effective parameter dimension: $W_2 \in \mathbb{R}^{d_{h} \times d_{out}},$ and $b_2 \in \mathbb{R}^{d_{out}},$ so final output dimension is $Y \in \mathbb{R}^{d_{out}}.$
+- First-layer effective parameter dimension: $W_{1} \in \mathbb{R}^{d_{in} \times d_{h}},$ and $b_{1} \in \mathbb{R}^{d_{h}}$ broadcast over batch $N$, so output of hidden layer is $H \in \mathbb{R}^{N \times d_{h}}.$
+- Second-layer effective parameter dimension: $W_{2} \in \mathbb{R}^{d_{h} \times d_{out}},$ and $b_{2} \in \mathbb{R}^{d_{out}},$ so final output dimension is $Y \in \mathbb{R}^{d_{out}}.$
 
-The hidden size $d_h$ controls model capacity. The output dimension $d_{out}$ depends on the target task dimension you need. Some examples of output dimension:
+The hidden size $d_{h}$ controls model capacity. The output dimension $d_{out}$ depends on the target task dimension you need.
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose hidden layer size in practice</span></summary>
+
+<p><strong>Start with one hidden layer.</strong> A single hidden layer is a universal approximator in theory, and in practice it handles most tabular and small-to-medium tasks well. Add a second layer only if validation loss plateaus and you have enough data to support the extra capacity. Three or more hidden layers in a plain MLP (no residual connections) rarely helps and makes optimization harder.</p>
+
+<p><strong>Width rules of thumb.</strong> A common starting point is to set the hidden size between the input dimension and the output dimension, for example $d_{h} = 2 \times d_{in}$ or $d_{h} = (d_{in} + d_{out}) / 2$. In practice, powers of two (64, 128, 256, 512) are preferred because they align well with GPU memory and SIMD hardware. For tabular data, 128 or 256 is a strong default. For the FFN inside a transformer block, the standard convention is $d_{ffn} = 4 \times d_{model}$.</p>
+
+<p><strong>Tuning strategy.</strong> Try a small grid: for example, $d_{h} \in \{64, 128, 256, 512\}$ with one hidden layer. Compare validation loss across runs. If the best model is the largest, try adding 1024. If the smallest works equally well, prefer it for speed and memory. When dataset size is small (a few thousand samples), keep the total parameter count well below the number of training examples to reduce overfitting risk.</p>
+
+<p><strong>Software example.</strong> In PyTorch, changing hidden size is just one argument: <code>nn.Linear(d_in, d_h)</code> followed by <code>nn.Linear(d_h, d_out)</code>. Grid search over $d_{h}$ is inexpensive for MLPs because each run is fast.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
+Some examples of output dimension:
 
 - Regression:
     - single-target: $d_{out}=1$
@@ -257,7 +273,7 @@ The hidden size $d_h$ controls model capacity. The output dimension $d_{out}$ de
     - Binary Classification: $d_{out}=1$ for sigmoid or $d_{out}=2$ for logits, either should work.
     - Multi-class (K-classes): $d_{out}=K$
 - LLM output:
-    - It's a classification task with number of classes equal to vocabulary size: $d_{out} = \|vocab\|$ like GPT-style model is about 50k tokens then $d_{out}=50,000.$
+    - It's a classification task with number of classes equal to vocabulary size: $d_{out} = \lVert vocab\rVert$ like GPT-style model is about 50k tokens then $d_{out}=50,000.$
 - Transformer: 
 Inside a transformer block:
     - MLP is keeping the input dimension where $d_{out}=d_{in}.$
@@ -288,7 +304,7 @@ Data parallelism is the most common starting point.
 - Each GPU runs forward and backward on its own mini-batch.
 - Gradients are synchronized across GPUs before the optimizer step.
 
-If GPU 1 sees batch shard $B_1$ and GPU 2 sees batch shard $B_2$, both compute their own local gradients, and then an all-reduce averages or sums them. After synchronization, all model copies stay identical.
+If GPU 1 sees batch shard $B_{1}$ and GPU 2 sees batch shard $B_{2}$, both compute their own local gradients, and then an all-reduce averages or sums them. After synchronization, all model copies stay identical.
 
 Why it is useful:
 
@@ -337,23 +353,23 @@ $$
 x \rightarrow L_1 \rightarrow L_2 \rightarrow L_3 \rightarrow \mathcal{L},
 $$
 
-with weights $W_1, W_2, W_3$ split across two GPUs. The exact sharding pattern can vary, but the key FSDP idea is always the same:
+with weights $W_{1}, W_{2}, W_{3}$ split across two GPUs. The exact sharding pattern can vary, but the key FSDP idea is always the same:
 
 - each GPU permanently stores only its shard,
 - before a layer is computed, the full parameter for that layer is reconstructed by all-gather,
 - after backward, the full gradient is reduce-scattered back into shards.
 
-Suppose GPU 1 stores $W_1$, $W_2^{(1)}$, $W_3^{(1)}$ and GPU 2 stores $W_2^{(2)}$, $W_3^{(2)}$.
+Suppose GPU 1 stores $W_{1}$, $W_{2}^{(1)}$, $W_{3}^{(1)}$ and GPU 2 stores $W_{2}^{(2)}$, $W_{3}^{(2)}$.
 
 #### Forward pass
 
-For layer 1, if $W_1$ is local to GPU 1, it computes
+For layer 1, if $W_{1}$ is local to GPU 1, it computes
 
 $$
 a_1 = xW_1.
 $$
 
-For a sharded layer such as $W_2$, the system first reconstructs the full weight:
+For a sharded layer such as $W_{2}$, the system first reconstructs the full weight:
 
 $$
 W_2 = \text{all-gather}(W_2^{(1)}, W_2^{(2)}).
@@ -365,7 +381,7 @@ $$
 a_2 = a_1 W_2.
 $$
 
-The same happens for $W_3$:
+The same happens for $W_{3}$:
 
 $$
 W_3 = \text{all-gather}(W_3^{(1)}, W_3^{(2)}),
@@ -379,7 +395,7 @@ After each layer finishes, the temporary full parameter can be discarded and eac
 
 Backward starts from the loss and moves from the last layer to the first, just as in ordinary backpropagation.
 
-For layer 3, each GPU temporarily has the full $W_3$, together with the needed activations and incoming gradient $\frac{\partial \mathcal{L}}{\partial a_3}$. It computes the standard local formulas:
+For layer 3, each GPU temporarily has the full $W_{3}$, together with the needed activations and incoming gradient $\frac{\partial \mathcal{L}}{\partial a_{3}}$. It computes the standard local formulas:
 
 $$
 \frac{\partial \mathcal{L}}{\partial W_3} = a_2^\top \frac{\partial \mathcal{L}}{\partial a_3},
@@ -391,7 +407,7 @@ Then FSDP applies reduce-scatter:
 
 - gradients are summed across workers,
 - the summed gradient is partitioned back into shards,
-- GPU 1 keeps only $\frac{\partial \mathcal{L}}{\partial W_3^{(1)}}$ and GPU 2 keeps only $\frac{\partial \mathcal{L}}{\partial W_3^{(2)}}$.
+- GPU 1 keeps only $\frac{\partial \mathcal{L}}{\partial W_{3}^{(1)}}$ and GPU 2 keeps only $\frac{\partial \mathcal{L}}{\partial W_{3}^{(2)}}$.
 
 The same pattern repeats for layer 2:
 
@@ -425,7 +441,7 @@ $$
 a = xW.
 $$
 
-For the backward pass, suppose worker $i$ computes its contribution $G_i$ to the gradient of one layer from its local batch shard. The true full-batch gradient is the sum over workers:
+For the backward pass, suppose worker $i$ computes its contribution $G_{i}$ to the gradient of one layer from its local batch shard. The true full-batch gradient is the sum over workers:
 
 $$
 \frac{\partial \mathcal{L}}{\partial W} = \sum_i G_i.
@@ -464,27 +480,27 @@ Then different stages work on different micro-batches at the same time.
 
 Suppose:
 
-- GPU 1 stores layers $L_1, L_2$,
-- GPU 2 stores layers $L_3, L_4$,
-- one large batch is split into 4 micro-batches: $MB_1, MB_2, MB_3, MB_4$.
+- GPU 1 stores layers $L_{1}, L_{2}$,
+- GPU 2 stores layers $L_{3}, L_{4}$,
+- one large batch is split into 4 micro-batches: $MB_{1}, MB_{2}, MB_{3}, MB_{4}$.
 
-In naive model parallelism, GPU 2 would sit idle until GPU 1 finishes processing the whole batch. In pipeline parallelism, as soon as GPU 1 finishes the forward pass of $MB_1$, it sends those activations to GPU 2 and immediately starts working on $MB_2$.
+In naive model parallelism, GPU 2 would sit idle until GPU 1 finishes processing the whole batch. In pipeline parallelism, as soon as GPU 1 finishes the forward pass of $MB_{1}$, it sends those activations to GPU 2 and immediately starts working on $MB_{2}$.
 
 So the forward pass looks like an assembly line:
 
 <div style="font-size: 0.95em; line-height: 1.8; margin: 1em 0;">
   <div><strong>GPU 1:</strong>
-    <span style="background:#f6d365; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_1$</span>
-    <span style="background:#fda085; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_2$</span>
-    <span style="background:#84fab0; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_3$</span>
-    <span style="background:#8fd3f4; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_4$</span>
+    <span style="background:#f6d365; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_{1}$</span>
+    <span style="background:#fda085; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_{2}$</span>
+    <span style="background:#84fab0; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_{3}$</span>
+    <span style="background:#8fd3f4; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_{4}$</span>
   </div>
   <div><strong>GPU 2:</strong>
     <span style="color:#999; padding:0.15em 0.45em;">idle</span>
-    <span style="background:#f6d365; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_1$</span>
-    <span style="background:#fda085; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_2$</span>
-    <span style="background:#84fab0; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_3$</span>
-    <span style="background:#8fd3f4; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_4$</span>
+    <span style="background:#f6d365; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_{1}$</span>
+    <span style="background:#fda085; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_{2}$</span>
+    <span style="background:#84fab0; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_{3}$</span>
+    <span style="background:#8fd3f4; padding:0.15em 0.45em; border-radius:0.4em;">F-$MB_{4}$</span>
   </div>
 </div>
 
@@ -498,17 +514,17 @@ So the backward stream looks like:
 
 <div style="font-size: 0.95em; line-height: 1.8; margin: 1em 0;">
   <div><strong>GPU 2:</strong>
-    <span style="background:#f6d365; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_1$</span>
-    <span style="background:#fda085; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_2$</span>
-    <span style="background:#84fab0; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_3$</span>
-    <span style="background:#8fd3f4; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_4$</span>
+    <span style="background:#f6d365; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_{1}$</span>
+    <span style="background:#fda085; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_{2}$</span>
+    <span style="background:#84fab0; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_{3}$</span>
+    <span style="background:#8fd3f4; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_{4}$</span>
   </div>
   <div><strong>GPU 1:</strong>
     <span style="color:#999; padding:0.15em 0.45em;">idle</span>
-    <span style="background:#f6d365; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_1$</span>
-    <span style="background:#fda085; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_2$</span>
-    <span style="background:#84fab0; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_3$</span>
-    <span style="background:#8fd3f4; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_4$</span>
+    <span style="background:#f6d365; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_{1}$</span>
+    <span style="background:#fda085; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_{2}$</span>
+    <span style="background:#84fab0; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_{3}$</span>
+    <span style="background:#8fd3f4; padding:0.15em 0.45em; border-radius:0.4em;">B-$MB_{4}$</span>
   </div>
 </div>
 
@@ -617,7 +633,7 @@ Rule of thumb: start with ReLU (general deep learning) or GELU (transformer-styl
           y_j = \sum_{i=1}^{d_{in}} W_{ji}\, x_i
           $$
 
-          If the $W_{ji}$ and $x_i$ are independent and zero-mean, then:
+          If the $W_{ji}$ and $x_{i}$ are independent and zero-mean, then:
 
           $$
           \mathrm{Var}(y_j) = d_{in}\cdot\mathrm{Var}(W)\cdot\mathrm{Var}(x)
@@ -666,16 +682,46 @@ Rule of thumb: start with ReLU (general deep learning) or GELU (transformer-styl
           $$
 
         - Why not all zeros? Every neuron computes the same output, so every gradient is identical, and the network can never break symmetry (it effectively has only one neuron per layer). Why not large random values? For Sigmoid/Tanh, large pre-activations push $e^{-x}$ toward $0$ or $\infty$, saturating outputs at their extremes (0/1 for Sigmoid, $\pm 1$ for Tanh) where gradients $\to 0$, so learning stalls (vanishing gradients). For ReLU and other unbounded activations, large weights cause activations to grow unchecked through layers, quickly reaching NaN (exploding activations).
-    - Learning rate: start with a moderate value (e.g., $10^{-3}$ for Adam, $10^{-2}$ for SGD). If loss diverges, reduce by 10x. If loss barely moves, increase by 2--5x. A learning-rate finder (sweep from $10^{-5}$ to $1$ and plot loss) is a quick diagnostic.
+    - Learning rate: start with a moderate value (e.g., $10^{-3}$ for Adam, $10^{-2}$ for SGD). If loss diverges, reduce by 10x. If loss barely moves, increase by 2–5x. A learning-rate finder (sweep from $10^{-5}$ to $1$ and plot loss) is a quick diagnostic.
     - Practical tip: combine a good initializer with Adam optimizer and a small learning rate as a safe default; tune from there.
 - No normalization/regularization: weak generalization.
     - Symptoms: training loss is low but validation loss is much higher (large gap).
     - Normalization: apply Batch Normalization (BatchNorm) between layers for standard MLPs; it stabilizes activations and often speeds up convergence. For very small batch sizes or sequence models, Layer Normalization (LayerNorm) is preferred (and is the standard inside transformers).
     - Regularization options:
-        - Dropout (e.g., rate 0.1--0.5): randomly zeros activations during training; simple and effective.
+        - Dropout (e.g., rate 0.1–0.5): randomly zeros activations during training; simple and effective.
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose dropout rate in practice</span></summary>
+
+<p><strong>Default range.</strong> Dropout rates between 0.1 and 0.5 cover most use cases. Start with 0.2 for a balanced default. Use the lower end (0.1) when you have plenty of data relative to model size or when the model is already small. Use the higher end (0.3 to 0.5) when the model is large relative to the dataset, or when the training/validation gap is wide.</p>
+
+<p><strong>Input dropout vs hidden dropout.</strong> Dropout can be applied to the input layer as well as hidden layers, but the rates should differ. Input dropout is typically much lower (0.0 to 0.1) because zeroing out raw features discards real signal. Hidden dropout can be higher (0.2 to 0.5) because hidden representations are redundant by design. In many frameworks you can set these separately: one <code>nn.Dropout</code> layer right after the input, and another between hidden layers.</p>
+
+<p><strong>Interaction with other regularizers.</strong> Dropout, weight decay, and early stopping all reduce overfitting. If you use all three, each one can be milder. A common combination is dropout 0.1 to 0.2 plus weight decay $10^{-4}$ plus early stopping. If you rely on dropout alone without weight decay, you may need a higher rate (0.3 to 0.5).</p>
+
+<p><strong>When not to use dropout.</strong> Dropout is rarely used in batch-normalized networks for computer vision (BatchNorm already regularizes). It is also typically omitted during fine-tuning of pretrained models when the dataset is large enough, since the pretrained weights already encode useful structure and aggressive dropout can erase it.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
         - Weight decay / L2 (e.g., $\lambda=10^{-4}$): penalizes large weights; built into most optimizers (`weight_decay` in AdamW).
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose weight decay in practice</span></summary>
+
+<p><strong>Default starting point.</strong> $\lambda = 10^{-4}$ is the most common default for AdamW and works well across a wide range of tasks. For SGD with momentum, values in the range $10^{-4}$ to $10^{-2}$ are typical, with $5 \times 10^{-4}$ being a popular choice (this was the default in the original ResNet training recipe).</p>
+
+<p><strong>Tuning via validation.</strong> Search over a log-scale grid: $\lambda \in \{0, 10^{-5}, 10^{-4}, 10^{-3}, 10^{-2}\}$. Train each configuration to completion (or use early stopping) and compare validation loss. Too little weight decay leaves the training/validation gap large (overfitting). Too much weight decay pushes both losses up (underfitting, because the penalty forces weights toward zero and limits model capacity).</p>
+
+<p><strong>AdamW vs classic L2.</strong> In AdamW, weight decay is applied directly to the parameters rather than added to the gradient. This "decoupled" weight decay behaves more predictably because the penalty does not interact with Adam's adaptive learning rates. When using AdamW, set the <code>weight_decay</code> argument directly. When using plain SGD, L2 regularization (adding $\lambda \lVert W \rVert^2$ to the loss) and weight decay are mathematically equivalent, so either implementation works.</p>
+
+<p><strong>What not to regularize.</strong> Bias terms and normalization parameters (BatchNorm/LayerNorm scale and shift) are usually excluded from weight decay because they have few parameters and penalizing them can hurt performance. In PyTorch, this is done by creating separate parameter groups: one with weight decay for weight matrices, and one without for biases and norm parameters.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
         - Early stopping: monitor validation loss and stop when it starts increasing.
-    - Rule of thumb: start with BatchNorm + Dropout (0.1--0.3) + weight decay ($10^{-4}$). Add or remove based on the train/validation gap.
+    - Rule of thumb: start with BatchNorm + Dropout (0.1–0.3) + weight decay ($10^{-4}$). Add or remove based on the train/validation gap.
 
 ## Key Takeaways
 

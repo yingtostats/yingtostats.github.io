@@ -20,26 +20,26 @@ This post turns transformer architecture into practical workflow: how models are
 
 ## Pretraining Objective (Decoder LLM)
 
-Most LLMs are trained by maximizing the log-likelihood of next-token prediction over a large text corpus. Given a training sequence $x = (x_1, x_2, \ldots, x_T)$, the autoregressive factorization from Series 3 gives:
+Most LLMs are trained by maximizing the log-likelihood of next-token prediction over a large text corpus. Given a training sequence $x = (x_{1}, x_{2}, \ldots, x_{T})$, the autoregressive factorization from Series 3 gives:
 
 $$
 \max_\theta \sum_{t=1}^{T} \log p_\theta(x_t \mid x_1, \ldots, x_{t-1}).
 $$
 
-Each term asks: given all tokens before position $t$, how much probability does the model assign to the actual next token $x_t$? Summing over all positions and all sequences in the training corpus, the optimizer adjusts $\theta$ (every learnable parameter in the transformer) to make these probabilities as large as possible.
+Each term asks: given all tokens before position $t$, how much probability does the model assign to the actual next token $x_{t}$? Summing over all positions and all sequences in the training corpus, the optimizer adjusts $\theta$ (every learnable parameter in the transformer) to make these probabilities as large as possible.
 
 The training data is typically a massive collection of web text, books, code, and other sources (hundreds of billions to trillions of tokens). Through this objective, the model learns statistical patterns of language, factual knowledge, reasoning patterns, and coding ability, all as a byproduct of learning to predict the next token well.
 
 <details>
 <summary><span style="color: saddlebrown; font-style: italic;">What is $p_\theta$? Parametric distribution, not a fixed multinomial</span></summary>
 
-<p>$p_\theta$ is a <strong>parametric</strong> conditional distribution. The subscript $\theta$ denotes every learnable parameter in the entire transformer: all $W_Q, W_K, W_V, W_O$ matrices across all heads and layers, all FFN weights, the embedding table, LayerNorm parameters, and the output head.</p>
+<p>$p_\theta$ is a <strong>parametric</strong> conditional distribution. The subscript $\theta$ denotes every learnable parameter in the entire transformer: all $W_{Q}, W_{K}, W_{V}, W_{O}$ matrices across all heads and layers, all FFN weights, the embedding table, LayerNorm parameters, and the output head.</p>
 
 <p>The output at each position is a <strong>categorical distribution</strong> over the vocabulary of size $V$. Here is how it is constructed:</p>
 
 <ol>
-<li>The transformer processes tokens $x_{\leq t}$ through all $L$ blocks, producing $h_t \in \mathbb{R}^{d_{model}}$.</li>
-<li>The output head projects to vocab size: $\text{logits}_t = h_t W_{\text{head}} \in \mathbb{R}^{V}$. This gives one raw score per vocabulary token.</li>
+<li>The transformer processes tokens $x_{\leq t}$ through all $L$ blocks, producing $h_{t} \in \mathbb{R}^{d_{model}}$.</li>
+<li>The output head projects to vocab size: $\text{logits}_{t} = h_{t} W_{\text{head}} \in \mathbb{R}^{V}$. This gives one raw score per vocabulary token.</li>
 <li>Softmax converts logits to probabilities:</li>
 </ol>
 
@@ -52,11 +52,11 @@ $$p_\theta(x_{t+1} = w \mid x_{\leq t}) = \frac{e^{\text{logits}_{t,w}}}{\sum_{w
 <p><strong>Cross-entropy loss vs maximum likelihood.</strong> The pretraining objective above is written as maximizing log-likelihood. In practice, training frameworks minimize a loss. The two are the same objective with a sign flip:</p>
 
 <ul>
-<li>Maximum likelihood: $\max_\theta \sum_t \log p_\theta(x_t \mid x_{&lt;t})$</li>
-<li>Cross-entropy loss: $\min_\theta -\sum_t \log p_\theta(x_t \mid x_{&lt;t})$</li>
+<li>Maximum likelihood: $\max_\theta \sum_{t} \log p_\theta(x_{t} \mid x_{&lt;t})$</li>
+<li>Cross-entropy loss: $\min_\theta -\sum_{t} \log p_\theta(x_{t} \mid x_{&lt;t})$</li>
 </ul>
 
-<p>The name "cross-entropy" comes from information theory. For a true distribution $q$ (one-hot: all probability mass on the actual next token $w^*$) and predicted distribution $p_\theta$, the cross-entropy is:</p>
+<p>The name "cross-entropy" comes from information theory. For a true distribution $q$ (one-hot: all probability mass on the actual next token $w^{\ast}$) and predicted distribution $p_\theta$, the cross-entropy is:</p>
 
 $$H(q, p_\theta) = -\sum_{w=1}^{V} q(w) \log p_\theta(w).$$
 
@@ -128,8 +128,8 @@ The training corpus for modern LLMs typically includes web crawls (Common Crawl,
 
 Training hyperparameters for large-scale pretraining follow the patterns from Series 2, but at much larger scale:
 
-- **Optimizer**: AdamW with $\beta_1 = 0.9$, $\beta_2 = 0.95$ (lower than the default 0.999 to adapt faster during long training runs).
-- **Learning rate**: warmup for the first 0.1--1% of steps, then cosine decay to ~10% of peak LR.
+- **Optimizer**: AdamW with $\beta_{1} = 0.9$, $\beta_{2} = 0.95$ (lower than the default 0.999 to adapt faster during long training runs).
+- **Learning rate**: warmup for the first 0.1–1% of steps, then cosine decay to ~10% of peak LR.
 - **Batch size**: large (millions of tokens per batch), often ramped up during training.
 - **Gradient clipping**: max gradient norm $c = 1.0$. If the gradient vector's length exceeds $c$, it is scaled down to length $c$ (direction preserved). See Series 2 for the full formula.
 - **Precision**: mixed precision training (BF16 or FP16 for forward/backward, FP32 for optimizer states).
@@ -170,7 +170,7 @@ Training hyperparameters for large-scale pretraining follow the patterns from Se
 <p><strong>Three formats:</strong></p>
 
 <ul>
-<li><strong>FP32</strong> (32-bit float): full precision. 1 sign bit, 8 exponent bits, 23 mantissa bits. Used for optimizer states ($m_t$, $v_t$ in AdamW) and the master copy of weights.</li>
+<li><strong>FP32</strong> (32-bit float): full precision. 1 sign bit, 8 exponent bits, 23 mantissa bits. Used for optimizer states ($m_{t}$, $v_{t}$ in AdamW) and the master copy of weights.</li>
 <li><strong>FP16</strong> (16-bit float): half precision. 1 sign bit, 5 exponent bits, 10 mantissa bits. Smaller range ($\pm 65504$), which can cause overflow during training.</li>
 <li><strong>BF16</strong> (bfloat16): 1 sign bit, 8 exponent bits, 7 mantissa bits. Same range as FP32 (8 exponent bits) but lower precision (7 vs 23 mantissa bits). Preferred for LLM training because it avoids overflow issues.</li>
 </ul>
@@ -184,7 +184,21 @@ Training hyperparameters for large-scale pretraining follow the patterns from Se
 <li>Update the FP32 master weights using the FP32 optimizer states.</li>
 </ol>
 
-<p>This gives nearly the same training dynamics as full FP32, at roughly half the memory for model weights and significantly faster computation. The FP32 optimizer states (AdamW stores $m_t$ and $v_t$ per parameter) are the dominant memory cost.</p>
+<p>This gives nearly the same training dynamics as full FP32, at roughly half the memory for model weights and significantly faster computation. The FP32 optimizer states (AdamW stores $m_{t}$ and $v_{t}$ per parameter) are the dominant memory cost.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose between BF16, FP16, and FP32 in practice</span></summary>
+
+<p><strong>Default choice: BF16.</strong> If your hardware supports it (NVIDIA A100, H100, or newer; Google TPUs), use BF16 for training. BF16 has the same exponent range as FP32 (8 exponent bits), which means it can represent very large and very small values without overflow or underflow. This makes it stable for LLM training without requiring loss scaling. Nearly all large-scale pretraining runs since 2022 use BF16.</p>
+
+<p><strong>When to use FP16.</strong> Older GPUs (V100, T4, consumer GPUs before RTX 30-series) do not have native BF16 support. On these GPUs, FP16 is the only half-precision option. FP16 has a narrower range ($\pm 65504$) due to only 5 exponent bits, which means gradients or activations can overflow during training. To compensate, FP16 training requires <strong>loss scaling</strong>: multiply the loss by a large factor (e.g., 1024) before the backward pass to push small gradients into FP16's representable range, then divide the gradients by the same factor before the optimizer step. PyTorch's <code>GradScaler</code> handles this automatically. FP16 with loss scaling works well for fine-tuning and smaller models, but can be fragile for large-scale pretraining where activation magnitudes vary widely across layers.</p>
+
+<p><strong>When to use full FP32.</strong> Two situations: (1) optimizer states, which should always be in FP32 regardless of the forward/backward precision, because the small weight updates from AdamW can vanish in half-precision arithmetic; (2) debugging training instability, where switching to full FP32 helps isolate whether a NaN or divergence is caused by precision issues or by a genuine optimization problem (bad learning rate, data corruption, etc.).</p>
+
+<p><strong>Inference precision.</strong> For inference (no gradient computation), precision requirements are more relaxed. BF16 is the standard serving format. FP16 also works well for inference since there is no gradient accumulation to overflow. For further memory savings, quantized formats (INT8, INT4) are increasingly common for inference and can cut memory by another 2-4x with modest quality loss. The choice depends on whether latency, throughput, or quality is the priority.</p>
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
 </details>
@@ -234,7 +248,7 @@ $$W_{\text{merged}} = \alpha \cdot W_{\text{medical}} + (1 - \alpha) \cdot W_{\t
 
 $$\text{MoE}(x) = \sum_{i=1}^{E} g_i(x) \cdot \text{FFN}_i(x),$$
 
-<p>where $g_i(x)$ is the gating weight for expert $i$, computed by the router:</p>
+<p>where $g_{i}(x)$ is the gating weight for expert $i$, computed by the router:</p>
 
 $$g(x) = \text{TopK}\!\left(\text{softmax}(x W_{\text{gate}})\right).$$
 
@@ -248,7 +262,7 @@ $$g(x) = \text{TopK}\!\left(\text{softmax}(x W_{\text{gate}})\right).$$
 
 $$\mathcal{L}_{\text{balance}} = E \cdot \sum_{i=1}^{E} f_i \cdot p_i,$$
 
-<p>where $f_i$ is the fraction of tokens routed to expert $i$ and $p_i$ is the average router probability assigned to expert $i$. This loss is minimized when all experts receive equal traffic. It is weighted by a small coefficient (e.g., 0.01) and added to the main next-token prediction loss.</p>
+<p>where $f_{i}$ is the fraction of tokens routed to expert $i$ and $p_{i}$ is the average router probability assigned to expert $i$. This loss is minimized when all experts receive equal traffic. It is weighted by a small coefficient (e.g., 0.01) and added to the main next-token prediction loss.</p>
 
 <p><strong>Trade-offs of MoE.</strong></p>
 
@@ -284,7 +298,7 @@ $$\mathcal{L}_{\text{balance}} = E \cdot \sum_{i=1}^{E} f_i \cdot p_i,$$
 At inference, a decoder-only LLM generates text one token at a time. Starting from a prompt, the model:
 
 1. Runs a forward pass through all $L$ transformer blocks.
-2. Takes the logits at the **last** position: $\text{logits} = h_T W_{\text{head}} \in \mathbb{R}^V$.
+2. Takes the logits at the **last** position: $\text{logits} = h_{T} W_{\text{head}} \in \mathbb{R}^V$.
 3. Applies a **sampling strategy** to select the next token.
 4. Appends the new token to the sequence and repeats from step 1.
 
@@ -339,12 +353,24 @@ For example, with $k = 3$ and probabilities $[0.4, 0.25, 0.15, 0.1, 0.05, 0.05]$
 
 This prevents the model from ever picking very unlikely tokens (which can cause incoherent output) while still allowing diversity among the top candidates.
 
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose the top-k value in practice</span></summary>
+
+<p><strong>Typical ranges.</strong> Common values of $k$ fall between 10 and 100. Smaller $k$ (10-20) keeps generation tightly focused on the most probable tokens, producing coherent but less diverse text. Larger $k$ (50-100) allows more variety but increases the chance of sampling an off-topic or awkward token. Values above 100 rarely help because the probability mass in the tail is negligible for most positions.</p>
+
+<p><strong>Interaction with temperature.</strong> Temperature and top-k interact in important ways. High temperature flattens the distribution, pushing probability mass toward lower-ranked tokens. If you use high temperature ($\tau = 1.0$+) with a large $k$, the model can sample from tokens that were originally very unlikely, leading to incoherent output. The safe combination is: if you raise temperature, lower $k$ (or use top-p instead). If you lower temperature, a larger $k$ is harmless because the distribution is already sharp and the extra candidates receive negligible probability anyway.</p>
+
+<p><strong>When to prefer top-p over top-k.</strong> The fundamental limitation of top-k is that it ignores the shape of the distribution. At a position where the model is confident (one token has 0.9 probability), $k = 50$ includes 49 tokens that collectively share 0.1 probability, adding noise. At a position where 20 tokens are roughly equally likely, $k = 10$ cuts off good candidates. Top-p ($p = 0.9$ or $0.95$) adapts to both cases automatically. For this reason, most production LLM APIs default to top-p rather than top-k. If you do use top-k, $k = 40$-$50$ with $\tau = 0.7$-$0.9$ is a reasonable starting point for general text generation.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
 ### Top-p (Nucleus) Sampling
 
 Instead of a fixed $k$, keep the smallest set of tokens whose cumulative probability exceeds a threshold $p$ (e.g., $p = 0.9$). This adapts to the shape of the distribution:
 
 - When the model is confident (one token has probability 0.95), top-p with $p = 0.9$ keeps just that one token.
-- When the model is uncertain (many tokens around 0.05--0.1), top-p keeps many candidates.
+- When the model is uncertain (many tokens around 0.05–0.1), top-p keeps many candidates.
 
 This is more flexible than top-k, which always keeps exactly $k$ tokens regardless of whether the model is confident or uncertain.
 
@@ -360,8 +386,8 @@ This is more flexible than top-k, which always keeps exactly $k$ tokens regardle
 <p>Typical settings for different use cases:</p>
 
 <ul>
-<li><strong>Code generation:</strong> low temperature (0.2--0.4), low top-p (0.9). Correctness matters more than creativity.</li>
-<li><strong>Creative writing:</strong> higher temperature (0.7--1.0), higher top-p (0.95). Diversity and surprise are desirable.</li>
+<li><strong>Code generation:</strong> low temperature (0.2–0.4), low top-p (0.9). Correctness matters more than creativity.</li>
+<li><strong>Creative writing:</strong> higher temperature (0.7–1.0), higher top-p (0.95). Diversity and surprise are desirable.</li>
 <li><strong>Factual Q&A:</strong> temperature close to 0 or greedy. Minimize hallucination.</li>
 </ul>
 
@@ -385,6 +411,20 @@ The context window is the maximum number of tokens the model can process in a si
 
 If the input exceeds the context window, the model cannot attend to tokens beyond it. Longer context windows require more memory (the attention matrix grows as $T^2$) and more compute.
 
+<details>
+<summary><span style="color: saddlebrown; font-style: italic;">How to choose context window size in practice</span></summary>
+
+<p><strong>Training context length.</strong> The context window used during pretraining determines what the model can reliably handle at inference. Training at 4K means the model has never seen attention patterns spanning more than 4K positions, so inference at 32K will degrade without additional work. The cost tradeoff is direct: doubling the training context length roughly quadruples the attention compute (the $T^2$ factor) and doubles the KV cache memory. Most teams start pretraining at a shorter context (2K-4K) and extend later, because the majority of training data consists of short documents and the model learns most of its language ability from local patterns.</p>
+
+<p><strong>Progressive context extension.</strong> Modern LLMs typically use a staged approach: pretrain at 4K-8K for most of training, then do a short continued-pretraining phase (1-5% of total tokens) at the target context length (32K, 128K). This is far cheaper than training at 128K from the start. The continued-pretraining phase uses long documents (books, concatenated articles, code repositories) so the model actually sees and learns to use the extended positions. LLaMA 3.1 and Qwen3 both adopted this approach. The RoPE base frequency is typically increased during extension (see the RoPE frequency base note in Series 3).</p>
+
+<p><strong>Inference considerations.</strong> A model trained at 32K can be served at 32K, but users may not always need the full window. Shorter inputs are cheaper (less KV cache memory, faster attention). When serving many concurrent users, the effective batch size is often limited by KV cache memory, not compute. Reducing the maximum generation length or using a shorter system prompt can significantly increase throughput. For applications that need to process very long documents (100K+ tokens), consider whether the task genuinely requires full attention over the entire document or whether a chunked approach (process segments independently, then combine) would suffice at much lower cost.</p>
+
+<p><strong>Practical defaults.</strong> For fine-tuning an existing model, match or stay below the base model's training context length unless you also do RoPE scaling and continued pretraining on long-context data. For new pretraining, 4K-8K for the main phase and 32K-128K for the extension phase is the current standard. Choose the final context length based on the target application: 4K is sufficient for single-turn Q&A, 32K covers most document analysis tasks, and 128K+ is needed for book-length inputs or multi-document reasoning.</p>
+
+<p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
+</details>
+
 ### KV Cache
 
 During autoregressive generation, the model produces tokens one at a time. At each step, it needs the key and value vectors of all previous tokens to compute attention. Without optimization, every new token would require recomputing Q, K, V for the entire sequence from scratch.
@@ -405,34 +445,34 @@ This reduces each generation step from $O(T \cdot d_{model})$ recomputation to $
 <p><strong>Step 1: process prompt "The".</strong></p>
 
 <ul>
-<li>Compute $q_0, k_0, v_0$ for "The".</li>
-<li>Cache: $K = [k_0]$, $V = [v_0]$.</li>
-<li>Attention: $q_0$ attends to $[k_0]$. Output predicts "cat".</li>
+<li>Compute $q_{0}, k_{0}, v_{0}$ for "The".</li>
+<li>Cache: $K = [k_{0}]$, $V = [v_{0}]$.</li>
+<li>Attention: $q_{0}$ attends to $[k_{0}]$. Output predicts "cat".</li>
 </ul>
 
 <p><strong>Step 2: generate "cat".</strong></p>
 
 <ul>
-<li>Compute $q_1, k_1, v_1$ for "cat" only (one token, not the full sequence).</li>
-<li>Append to cache: $K = [k_0, k_1]$, $V = [v_0, v_1]$.</li>
-<li>Attention: $q_1$ attends to $[k_0, k_1]$. Output predicts "sat".</li>
+<li>Compute $q_{1}, k_{1}, v_{1}$ for "cat" only (one token, not the full sequence).</li>
+<li>Append to cache: $K = [k_{0}, k_{1}]$, $V = [v_{0}, v_{1}]$.</li>
+<li>Attention: $q_{1}$ attends to $[k_{0}, k_{1}]$. Output predicts "sat".</li>
 </ul>
 
 <p><strong>Step 3: generate "sat".</strong></p>
 
 <ul>
-<li>Compute $q_2, k_2, v_2$ for "sat" only.</li>
-<li>Append to cache: $K = [k_0, k_1, k_2]$, $V = [v_0, v_1, v_2]$.</li>
-<li>Attention: $q_2$ attends to $[k_0, k_1, k_2]$. Output predicts the next token.</li>
+<li>Compute $q_{2}, k_{2}, v_{2}$ for "sat" only.</li>
+<li>Append to cache: $K = [k_{0}, k_{1}, k_{2}]$, $V = [v_{0}, v_{1}, v_{2}]$.</li>
+<li>Attention: $q_{2}$ attends to $[k_{0}, k_{1}, k_{2}]$. Output predicts the next token.</li>
 </ul>
 
 <p>At each step, only one new token is processed through the Q, K, V projections and FFN. The expensive part (projecting and transforming all previous tokens) is not repeated.</p>
 
-<p><strong>Memory cost.</strong> The KV cache stores $K$ and $V$ for every layer and every head. For a model with $L$ layers, $H_{kv}$ KV heads, per-head dimension $d_k$, and sequence length $T$:</p>
+<p><strong>Memory cost.</strong> The KV cache stores $K$ and $V$ for every layer and every head. For a model with $L$ layers, $H_{kv}$ KV heads, per-head dimension $d_{k}$, and sequence length $T$:</p>
 
 $$\text{KV cache size} = 2 \times L \times H_{kv} \times T \times d_k \times \text{bytes per element}.$$
 
-<p>For Qwen3-8B ($L = 36$, $H_{kv} = 8$ with GQA, $d_k = 128$) at $T = 32{,}768$ in BF16 (2 bytes):</p>
+<p>For Qwen3-8B ($L = 36$, $H_{kv} = 8$ with GQA, $d_{k} = 128$) at $T = 32{,}768$ in BF16 (2 bytes):</p>
 
 $$2 \times 36 \times 8 \times 32{,}768 \times 128 \times 2 \approx 4.8 \text{ GB}.$$
 
@@ -460,7 +500,7 @@ Kaplan et al. (2020) and Hoffmann et al. (2022, "Chinchilla") showed that these 
 
 $$L(N, D) \approx \left(\frac{N_c}{N}\right)^{\alpha_N} + \left(\frac{D_c}{D}\right)^{\alpha_D} + L_\infty,$$
 
-<p>where $N$ is the number of parameters, $D$ is the number of training tokens, and $L_\infty$ is an irreducible loss (entropy of natural language). The exponents $\alpha_N \approx 0.076$ and $\alpha_D \approx 0.095$ mean that both axes give diminishing returns: doubling model size or data does not halve the loss.</p>
+<p>where $N$ is the number of parameters, $D$ is the number of training tokens, and $L_\infty$ is an irreducible loss (entropy of natural language). The exponents $\alpha_{N} \approx 0.076$ and $\alpha_{D} \approx 0.095$ mean that both axes give diminishing returns: doubling model size or data does not halve the loss.</p>
 
 <p><strong>Compute-optimal training (Chinchilla).</strong> For a fixed compute budget $C \propto N \times D$ (FLOPs $\approx 6ND$ for a forward + backward pass), the optimal allocation is roughly:</p>
 
@@ -507,15 +547,15 @@ Flash:     for each block of Q rows:
              write final output block to HBM
 </code></pre>
 
-<p><strong>The hard part: incremental softmax.</strong> Softmax needs the entire row to normalize: $\text{softmax}(s_j) = e^{s_j} / \sum_{j'} e^{s_{j'}}$. If you process K in blocks, you do not have all $T$ scores at once. Flash Attention uses the <strong>online softmax trick</strong>: maintain a running maximum $m$ and running sum $\ell$ as each block is processed, and rescale partial results when the maximum changes.</p>
+<p><strong>The hard part: incremental softmax.</strong> Softmax needs the entire row to normalize: $\text{softmax}(s_{j}) = e^{s_{j}} / \sum_{j'} e^{s_{j'}}$. If you process K in blocks, you do not have all $T$ scores at once. Flash Attention uses the <strong>online softmax trick</strong>: maintain a running maximum $m$ and running sum $\ell$ as each block is processed, and rescale partial results when the maximum changes.</p>
 
 <p>For each new block $b$:</p>
 
 <ol>
-<li>Compute local scores: $s^{(b)} = q \cdot K_b^\top / \sqrt{d_k}$.</li>
+<li>Compute local scores: $s^{(b)} = q \cdot K_{b}^\top / \sqrt{d_{k}}$.</li>
 <li>Update running max: $m_{\text{new}} = \max(m_{\text{old}}, \max(s^{(b)}))$.</li>
 <li>Rescale old accumulator: $O \leftarrow O \cdot e^{m_{\text{old}} - m_{\text{new}}}$.</li>
-<li>Accumulate: $O \leftarrow O + e^{s^{(b)} - m_{\text{new}}} \cdot V_b$.</li>
+<li>Accumulate: $O \leftarrow O + e^{s^{(b)} - m_{\text{new}}} \cdot V_{b}$.</li>
 <li>Update running sum: $\ell \leftarrow \ell \cdot e^{m_{\text{old}} - m_{\text{new}}} + \sum e^{s^{(b)} - m_{\text{new}}}$.</li>
 </ol>
 
@@ -597,7 +637,7 @@ User:   What are the treatment options for atrial fibrillation?
 
 <ul>
 <li><strong>Be specific.</strong> "Summarize this article" is vague. "Summarize this article in 3 bullet points, each under 20 words, focusing on the methodology" tells the model exactly what you want.</li>
-<li><strong>Provide examples (few-shot).</strong> Showing 2--3 examples of the desired input-output format is often more effective than describing the format in words. The model pattern-matches from examples.</li>
+<li><strong>Provide examples (few-shot).</strong> Showing 2–3 examples of the desired input-output format is often more effective than describing the format in words. The model pattern-matches from examples.</li>
 <li><strong>Specify the output format.</strong> If you want JSON, say "respond in valid JSON with keys: name, age, diagnosis." If you want a table, show the header row. Ambiguous format instructions produce ambiguous output.</li>
 <li><strong>Assign a role.</strong> "You are an experienced cardiologist reviewing a case" activates different knowledge patterns than "Answer this medical question." Roles prime the model toward domain-appropriate language and reasoning depth.</li>
 </ul>
@@ -619,7 +659,7 @@ User:   What are the treatment options for atrial fibrillation?
 <li><strong>Too vague:</strong> "Make this better." Better how? More concise? More formal? More accurate?</li>
 <li><strong>Contradictory instructions:</strong> "Be concise and thorough." Pick one priority.</li>
 <li><strong>Assuming prior context:</strong> "As I said earlier..." in a new conversation. The model has no memory of earlier conversations.</li>
-<li><strong>Over-constraining:</strong> 20 instructions in the system prompt can cause the model to ignore some. Prioritize the most important 3--5 constraints.</li>
+<li><strong>Over-constraining:</strong> 20 instructions in the system prompt can cause the model to ignore some. Prioritize the most important 3–5 constraints.</li>
 </ul>
 
 <p style="margin-top: 0.9em; padding-top: 0.45em; border-top: 1px dashed #c9b39a; font-size: 0.92em; color: #8b5a2b;"><em>End of expanded note.</em></p>
@@ -633,7 +673,7 @@ User:   What are the treatment options for atrial fibrillation?
 
 **Decoding is where you control the output.** The model produces a probability distribution over the vocabulary; the decoding strategy (greedy, temperature, top-k, top-p) determines how you sample from it. Temperature controls the entropy of the distribution, top-k/top-p truncate the tail. These are not minor details: the same model can appear incoherent or brilliant depending on the decoding settings.
 
-**The KV cache makes autoregressive generation practical.** Without it, generating each new token requires reprocessing the entire sequence through all layers. With it, only the new token is processed, and its K/V vectors are appended to the cache. The memory cost is $2 \times L \times H_{kv} \times T \times d_k$ per sequence, which is why KV cache memory is often the bottleneck for inference serving.
+**The KV cache makes autoregressive generation practical.** Without it, generating each new token requires reprocessing the entire sequence through all layers. With it, only the new token is processed, and its K/V vectors are appended to the cache. The memory cost is $2 \times L \times H_{kv} \times T \times d_{k}$ per sequence, which is why KV cache memory is often the bottleneck for inference serving.
 
 **Scaling is predictable, not magical.** Loss decreases as a smooth power law of compute, data, and model size. The Chinchilla result showed that the optimal allocation is to train a smaller model on more data, not the other way around. Most early LLMs were undertrained relative to their size.
 
@@ -645,7 +685,7 @@ User:   What are the treatment options for atrial fibrillation?
 
 **Tradeoff: output quality vs latency in decoding.** Greedy decoding is fastest (one forward pass, take the argmax) but produces repetitive, deterministic text. Temperature sampling adds diversity but risks incoherence at high temperatures. Top-p/top-k truncation finds a middle ground by allowing diversity within a controlled set of likely tokens. Beam search explores multiple candidates but multiplies compute by the beam width. For interactive applications, the latency cost of sophisticated decoding directly trades against response quality.
 
-**Tradeoff: KV cache memory vs generation speed.** The KV cache eliminates redundant recomputation (each new token only requires one forward pass instead of $T$), but stores $O(L \times H_{kv} \times T \times d_k)$ per active sequence. Serving many concurrent users multiplies this by the number of sequences, often exceeding the model weights themselves in memory. Grouped-query attention (GQA) reduces the cache by sharing K/V across heads, trading a small accuracy loss for $4\text{-}8\times$ memory savings.
+**Tradeoff: KV cache memory vs generation speed.** The KV cache eliminates redundant recomputation (each new token only requires one forward pass instead of $T$), but stores $O(L \times H_{kv} \times T \times d_{k})$ per active sequence. Serving many concurrent users multiplies this by the number of sequences, often exceeding the model weights themselves in memory. Grouped-query attention (GQA) reduces the cache by sharing K/V across heads, trading a small accuracy loss for $4\text{-}8\times$ memory savings.
 
 **Tradeoff: RAG vs fine-tuning for knowledge.** Fine-tuning bakes knowledge into model weights (always available, no context cost, but expensive to update and risks catastrophic forgetting). RAG injects knowledge at inference time via the context window (instantly updatable, no retraining, but consumes context tokens and depends on retrieval quality). For static domain expertise, fine-tune. For dynamic or large-scale knowledge bases, RAG. Most production systems combine both.
 
