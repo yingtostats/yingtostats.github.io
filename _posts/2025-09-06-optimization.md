@@ -20,6 +20,20 @@ $$\min_\theta\; L(\theta) = \frac{1}{n}\sum_{i=1}^n \ell(\theta;\, x_i, y_i).$$
 
 Here $\ell(\theta; x_{i}, y_{i})$ is the **per-sample loss** (e.g., cross-entropy $-\log p_\theta(y_{i} \mid x_{i})$, or squared error $\frac{1}{2}(f_\theta(x_{i}) - y_{i})^2$), and $L(\theta)$ is its average over the training set. Note: $\ell$ here is the loss, not the log-likelihood, though for maximum likelihood estimation the two coincide up to sign ($\ell = -\log p_\theta$). $n$ can be enormous in modern settings (billions of tokens for LLM pretraining), and $L$ is typically nonconvex. This post covers convergence rates, first-order methods, momentum, adaptive methods (including Muon), proximal methods, second-order methods, and practical engineering tricks for deep learning and LLM training.
 
+<div style="border:1px solid #c9b39a; border-radius:6px; background:#fcf9f3; padding:0.7em 1.15em; margin:1.7em 0; font-size:0.88em; line-height:1.7;">
+<p style="margin:0 0 0.55em; font-weight:700; color:#8b5a2b; text-transform:uppercase; letter-spacing:0.05em; font-size:0.8em;">Quick index — jump to a method</p>
+<p style="margin:0.3em 0;"><a href="#convergence-rates"><strong>Convergence rates</strong></a>: <a href="#r-rate-global-rate-of-decay">R-rate (global)</a> · <a href="#q-rate-local-ratio">Q-rate (local)</a></p>
+<p style="margin:0.3em 0;"><a href="#first-order-gradient-methods"><strong>First-order gradient methods</strong></a>: <a href="#gradient-descent">Gradient descent</a> · <a href="#stochastic-gradient-descent">SGD</a></p>
+<p style="margin:0.3em 0;"><a href="#momentum-methods"><strong>Momentum methods</strong></a>: <a href="#heavy-ball-classical-momentum">Heavy ball</a> · <a href="#nesterov-accelerated-gradient">Nesterov</a></p>
+<p style="margin:0.3em 0;"><a href="#adaptive-learning-rate-methods"><strong>Adaptive learning rate</strong></a>: <a href="#adagrad">AdaGrad</a> · <a href="#rmsprop">RMSprop</a> · <a href="#adam">Adam</a> · <a href="#adamw">AdamW</a> · <a href="#muon">Muon</a></p>
+<p style="margin:0.3em 0;"><a href="#learning-rate-schedules"><strong>Learning rate schedules</strong></a></p>
+<p style="margin:0.3em 0;"><a href="#proximal-and-constrained-optimization"><strong>Proximal and constrained optimization</strong></a>: <a href="#subgradients">Subgradients</a> · <a href="#optimality-conditions-and-kkt">KKT conditions</a> · <a href="#primal-and-dual-problems">Primal and dual</a> · <a href="#proximal-operator">Proximal operator</a> · <a href="#proximal-gradient-ista">ISTA</a> · <a href="#fista">FISTA</a> · <a href="#admm">ADMM</a></p>
+<p style="margin:0.3em 0;"><a href="#second-order-methods"><strong>Second-order methods</strong></a></p>
+<p style="margin:0.3em 0;"><a href="#loss-landscape-and-generalization"><strong>Loss landscape and generalization</strong></a></p>
+<p style="margin:0.3em 0;"><a href="#practical-tricks-for-deep-learning-and-llm-training"><strong>Practical tricks (DL / LLM)</strong></a>: <a href="#gradient-clipping">Gradient clipping</a> · <a href="#mixed-precision-training">Mixed precision</a> · <a href="#gradient-accumulation">Gradient accumulation</a> · <a href="#batch-size-and-learning-rate-scaling">Batch size and LR scaling</a> · <a href="#parameter-initialization">Initialization</a> · <a href="#gradient-checkpointing">Checkpointing</a> · <a href="#optimizer-state-sharding-zero">ZeRO sharding</a> · <a href="#pre-norm-vs-post-norm">Pre- vs post-norm</a></p>
+<p style="margin:0.3em 0;"><a href="#key-takeaways"><strong>Key takeaways</strong></a> · <a href="#comparison"><strong>Comparison table</strong></a></p>
+</div>
+
 ## Convergence Rates
 
 Two classification systems are commonly used and should not be confused.
@@ -993,6 +1007,7 @@ $$g_k \leftarrow g_k \cdot \min\!\left(1,\; \frac{c}{\|g_k\|_2}\right).$$
 This leaves small gradients unchanged and shrinks large gradients proportionally, preventing a single bad batch from destabilizing the optimizer state. In LLM training with AdamW, $c = 1.0$ is standard. Without clipping, a spike in gradient magnitude inflates $v_{k}$ in Adam, suppressing the effective learning rate for many subsequent steps.
 
 ### Mixed Precision Training (FP16 / BF16)
+{:#mixed-precision-training}
 
 Store activations and gradients in 16-bit floating point to halve memory and double throughput on modern hardware, while keeping a **master copy of weights in FP32** for accurate parameter updates.
 
