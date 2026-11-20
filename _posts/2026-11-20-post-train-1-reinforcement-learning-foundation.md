@@ -10,6 +10,7 @@ blog: true
 author: YingZhang
 coauthor_name: WenboGuo
 coauthor_url: "https://henrygwb.github.io"
+external_url: "https://henrygwb.github.io/posts/rl.htm"
 description: Post-training Series 1. Co-authored with Wenbo Guo; read the full article on his blog.
 fontsize: 23pt
 ---
