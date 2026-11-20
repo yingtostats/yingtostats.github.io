@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Reinforcement Learning in LLM and Agentic Training: Methods, Tricks, and Applications in SWE"
-date: 2026-11-20 10:00:00
+date: 2026-11-20 00:00:00
 published: true
 tag:
 - Post Training
